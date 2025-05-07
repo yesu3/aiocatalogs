@@ -83,4 +83,4 @@ User configurations are stored in the `userConfigs/` directory in the project ro
 
 ## License
 
-This project is licensed under the ISC License.
+This project is licensed under the MIT License.
