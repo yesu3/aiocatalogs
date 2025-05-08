@@ -5,19 +5,55 @@ import { version, description } from '../../package.json';
 // Cache für Builder um Mehrfacherstellung zu vermeiden
 const addonCache = new Map();
 
+const ADDON_ID = 'community.aiocatalogs';
+
 // Standardmanifest für einen Benutzer erstellen
 function buildManifest(userId: string) {
-  return {
-    id: `aio-catalogs-${userId}`,
-    version,
-    name: 'AIOCatalogs',
-    description,
-    resources: ['catalog'],
-    types: ['movie', 'series'],
-    catalogs: [] as Array<{ id: string; type: string; name: string }>,
-    background: 'https://i.imgur.com/mjyzBmX.png',
-    logo: 'https://i.imgur.com/mjyzBmX.png',
-  };
+  try {
+    // Manifest-Objekt initialisieren
+    const manifest = {
+      id: `${ADDON_ID}.${userId}`,
+      version,
+      name: 'AIOCatalogs',
+      description,
+      logo: 'https://i.imgur.com/mjyzBmX.png',
+      background: 'https://i.imgur.com/X9PYlKT.jpg',
+      resources: [] as string[],
+      types: [] as string[],
+      catalogs: [] as Array<{ id: string; type: string; name: string }>,
+      behaviorHints: {
+        configurable: true,
+        configurationRequired: false,
+      },
+    };
+
+    return manifest;
+  } catch (error) {
+    console.error('Error building manifest:', error);
+
+    // Fallback-Manifest zurückgeben
+    return {
+      id: `${ADDON_ID}.${userId}`,
+      version,
+      name: 'AIOCatalogs',
+      description: 'Error loading configuration',
+      logo: 'https://i.imgur.com/mjyzBmX.png',
+      background: 'https://i.imgur.com/X9PYlKT.jpg',
+      resources: ['catalog'],
+      types: ['movie'],
+      catalogs: [
+        {
+          type: 'movie',
+          id: 'error',
+          name: 'Error: Configuration could not be loaded',
+        },
+      ],
+      behaviorHints: {
+        configurable: true,
+        configurationRequired: false,
+      },
+    };
+  }
 }
 
 // Ein AddonInterface für einen bestimmten Benutzer erstellen
@@ -36,26 +72,52 @@ export async function getAddonInterface(userId: string, db: D1Database) {
   // Manifest erstellen
   const manifest = buildManifest(userId);
 
+  // Sammle alle Kataloge, Typen und Ressourcen
+  const allTypes = new Set<string>();
+  const allResources = new Set<string>();
+
+  // Nur 'catalog' hinzufügen, da wir nur diesen Handler definieren
+  allResources.add('catalog');
+
   // Kataloge zum Manifest hinzufügen
   if (userCatalogs.length === 0) {
     // Default-Katalog, wenn keine Kataloge konfiguriert wurden
     manifest.catalogs.push({
       id: 'aiocatalogs-default',
       type: 'movie',
-      name: 'Setup Required',
+      name: 'AIO Catalogs (No catalogs added yet)',
     });
+    allTypes.add('movie');
   } else {
     // Kataloge aus den Benutzerkonfigurationen hinzufügen
     userCatalogs.forEach(source => {
+      // Kataloge aus dieser Quelle hinzufügen
       source.catalogs.forEach(catalog => {
         manifest.catalogs.push({
           id: `${source.id}:${catalog.id}`,
           type: catalog.type,
           name: `${source.name}: ${catalog.name}`,
         });
+
+        // Typen für das Manifest sammeln
+        allTypes.add(catalog.type);
       });
+
+      // Ressourcen aus der Quelle sammeln -
+      // aber nur solche beibehalten, die wir unterstützen
+      if (source.resources) {
+        source.resources.forEach(resource => {
+          if (resource === 'catalog') {
+            allResources.add(resource);
+          }
+        });
+      }
     });
   }
+
+  // Gesammelte Typen und Ressourcen in das Manifest einfügen
+  manifest.types = Array.from(allTypes);
+  manifest.resources = Array.from(allResources);
 
   // AddonInterface erstellen
   const addonInterface = {
@@ -72,7 +134,7 @@ export async function getAddonInterface(userId: string, db: D1Database) {
             metas: [
               {
                 id: 'setup-required',
-                type: 'movie',
+                type: args.type,
                 name: 'Setup Required',
                 poster: 'https://i.imgur.com/mjyzBmX.png',
                 description: 'Please visit the configuration page to add catalogs.',

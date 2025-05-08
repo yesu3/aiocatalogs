@@ -1,33 +1,5 @@
-export interface CatalogManifest {
-  id: string;
-  name: string;
-  description: string;
-  version: string;
-  resources: string[];
-  types: string[];
-  catalogs: {
-    type: string;
-    id: string;
-    name: string;
-  }[];
-  idPrefixes?: string[];
-  behaviorHints?: {
-    adult?: boolean;
-    p2p?: boolean;
-  };
-  endpoint: string;
-}
+// Import shared types from common types package
+import { CatalogManifest, UserConfig, MetaPreviewItem } from '../types';
 
-export interface UserConfig {
-  catalogs: CatalogManifest[];
-}
-
-export interface MetaPreviewItem {
-  id: string;
-  type: string;
-  name: string;
-  poster?: string;
-  background?: string;
-  logo?: string;
-  description?: string;
-}
+// Re-export the types
+export { CatalogManifest, UserConfig, MetaPreviewItem };
