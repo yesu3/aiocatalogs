@@ -13,7 +13,7 @@ declare module "stremio-addon-sdk" {
   export class serveHTTP {
     constructor(
       addonInterface: any,
-      options?: { port?: number; cacheMaxAge?: number }
+      options?: { port?: number; cacheMaxAge?: number },
     );
     middleware(): any;
     run(): void;
@@ -21,6 +21,6 @@ declare module "stremio-addon-sdk" {
 
   export function getRouter(
     addonInterface: any,
-    options?: { cacheMaxAge?: number }
+    options?: { cacheMaxAge?: number },
   ): any;
 }

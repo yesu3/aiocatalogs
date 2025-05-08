@@ -6,7 +6,7 @@ class CatalogAggregator {
   async fetchCatalogData(
     userId: string,
     catalogType: string,
-    catalogId: string
+    catalogId: string,
   ): Promise<MetaPreviewItem[]> {
     const allCatalogs = configManager.getAllCatalogs(userId);
     const results: MetaPreviewItem[] = [];
@@ -16,7 +16,7 @@ class CatalogAggregator {
       const matchingCatalog = catalog.catalogs.find(
         (cat) =>
           cat.type === catalogType &&
-          (catalogId === "all" || cat.id === catalogId)
+          (catalogId === "all" || cat.id === catalogId),
       );
 
       if (matchingCatalog) {
@@ -30,7 +30,7 @@ class CatalogAggregator {
 
           if (!response.ok) {
             console.error(
-              `Error fetching from catalog ${catalog.id}: ${response.statusText}`
+              `Error fetching from catalog ${catalog.id}: ${response.statusText}`,
             );
             continue;
           }
@@ -58,7 +58,7 @@ class CatalogAggregator {
 
   // Get all catalog types and IDs from the user's added catalogs
   getAllCatalogTypes(
-    userId: string
+    userId: string,
   ): { type: string; id: string; name: string }[] {
     const catalogs = configManager.getAllCatalogs(userId);
     const allCatalogTypes: { type: string; id: string; name: string }[] = [];
@@ -112,7 +112,7 @@ class CatalogAggregator {
 
   // Fetch catalog manifest from URL
   async fetchCatalogManifest(
-    catalogUrl: string
+    catalogUrl: string,
   ): Promise<CatalogManifest | null> {
     try {
       // Normalize the URL to ensure it points to the manifest.json
@@ -120,7 +120,7 @@ class CatalogAggregator {
       if (endpoint.endsWith("/manifest.json")) {
         endpoint = endpoint.substring(
           0,
-          endpoint.length - "/manifest.json".length
+          endpoint.length - "/manifest.json".length,
         );
       }
 

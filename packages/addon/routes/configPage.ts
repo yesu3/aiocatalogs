@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import configManager from "../lib/configManager";
 import catalogAggregator from "../lib/catalogAggregator";
 import { CatalogManifest } from "../types";
@@ -18,7 +17,7 @@ const getConfigPageHTML = (
   catalogs: CatalogManifest[],
   baseUrl: string,
   message: string = "",
-  error: string = ""
+  error: string = "",
 ) => {
   const catalogRows = catalogs
     .map(
@@ -39,7 +38,7 @@ const getConfigPageHTML = (
       <p class="text-sm text-muted-foreground">${catalog.description}</p>
       <p class="text-xs font-mono text-muted-foreground truncate">${catalog.endpoint}</p>
     </div>
-  `
+  `,
     )
     .join("");
 
@@ -47,7 +46,7 @@ const getConfigPageHTML = (
   const stremioUrl = `stremio://${baseUrl}/manifest.json?userId=${userId}`;
   const manifestUrl = `http://${baseUrl}/manifest.json?userId=${userId}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-    stremioUrl
+    stremioUrl,
   )}`;
 
   return `
@@ -436,7 +435,7 @@ export const addCatalog = async (req: any, res: any) => {
       res.redirect(`/configure/${userId}?message=Catalog added successfully`);
     } else {
       res.redirect(
-        `/configure/${userId}?error=Failed to fetch catalog manifest`
+        `/configure/${userId}?error=Failed to fetch catalog manifest`,
       );
     }
   } catch (error) {

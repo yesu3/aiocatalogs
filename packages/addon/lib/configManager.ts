@@ -41,7 +41,7 @@ class ConfigManager {
         console.log(
           `Loaded config for user ${userId} with ${
             config.catalogs?.length || 0
-          } catalogs`
+          } catalogs`,
         );
 
         this.configs.set(userId, config);
@@ -62,7 +62,7 @@ class ConfigManager {
   saveConfig(userId: string): boolean {
     if (!this.configs.has(userId)) {
       console.error(
-        `Cannot save config for user ${userId}: config not found in memory`
+        `Cannot save config for user ${userId}: config not found in memory`,
       );
       return false;
     }
@@ -72,7 +72,7 @@ class ConfigManager {
 
     try {
       console.log(
-        `Saving config for user ${userId} with ${config.catalogs.length} catalogs to ${configPath}`
+        `Saving config for user ${userId} with ${config.catalogs.length} catalogs to ${configPath}`,
       );
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       return true;
@@ -94,7 +94,7 @@ class ConfigManager {
 
     // Check if a catalog with the same ID already exists
     const existingIndex = config.catalogs.findIndex(
-      (c) => c.id === manifest.id
+      (c) => c.id === manifest.id,
     );
 
     if (existingIndex >= 0) {
@@ -108,7 +108,7 @@ class ConfigManager {
     const success = this.saveConfig(userId);
     if (success) {
       console.log(
-        `Successfully saved config with ${config.catalogs.length} catalogs`
+        `Successfully saved config with ${config.catalogs.length} catalogs`,
       );
     } else {
       console.error(`Failed to save config`);
@@ -125,7 +125,7 @@ class ConfigManager {
 
     config.catalogs = config.catalogs.filter((c) => c.id !== id);
     console.log(
-      `After removal: ${config.catalogs.length} catalogs (was ${initialLength})`
+      `After removal: ${config.catalogs.length} catalogs (was ${initialLength})`,
     );
 
     if (initialLength !== config.catalogs.length) {
@@ -145,7 +145,7 @@ class ConfigManager {
   getAllCatalogs(userId: string): CatalogManifest[] {
     const config = this.loadConfig(userId);
     console.log(
-      `Getting all catalogs for user ${userId}: found ${config.catalogs.length}`
+      `Getting all catalogs for user ${userId}: found ${config.catalogs.length}`,
     );
     return config.catalogs;
   }

@@ -1,5 +1,4 @@
 import { addonBuilder as StremioAddonBuilder } from "stremio-addon-sdk";
-import catalogAggregator from "./lib/catalogAggregator";
 import configManager from "./lib/configManager";
 
 const ADDON_ID = "org.aiocatalogs";
@@ -9,7 +8,7 @@ const buildManifest = (userId: string) => {
   // Get all catalog sources for the user
   const userCatalogs = configManager.getAllCatalogs(userId);
   console.log(
-    `Building manifest for user ${userId} with ${userCatalogs.length} catalog sources`
+    `Building manifest for user ${userId} with ${userCatalogs.length} catalog sources`,
   );
 
   // Collect all catalogs from all sources
@@ -20,13 +19,13 @@ const buildManifest = (userId: string) => {
   // Collect catalogs, types and resources from all sources
   for (const source of userCatalogs) {
     console.log(
-      `Processing source: ${source.id} (${source.name}) with ${source.catalogs.length} catalogs`
+      `Processing source: ${source.id} (${source.name}) with ${source.catalogs.length} catalogs`,
     );
 
     // Add all catalogs from this source
     for (const catalog of source.catalogs) {
       console.log(
-        `Adding catalog: ${catalog.type}/${catalog.id} (${catalog.name})`
+        `Adding catalog: ${catalog.type}/${catalog.id} (${catalog.name})`,
       );
 
       allCatalogs.push({
@@ -59,7 +58,7 @@ const buildManifest = (userId: string) => {
   }
 
   console.log(
-    `Final manifest will contain ${allCatalogs.length} catalogs, ${allTypes.size} types, and ${allResources.size} resources`
+    `Final manifest will contain ${allCatalogs.length} catalogs, ${allTypes.size} types, and ${allResources.size} resources`,
   );
 
   // Build the manifest

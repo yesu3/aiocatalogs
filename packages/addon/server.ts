@@ -1,8 +1,7 @@
-import { serveHTTP, getRouter } from "stremio-addon-sdk";
+import { getRouter } from "stremio-addon-sdk";
 import express from "express";
 import bodyParser from "body-parser";
 import { createAddonBuilder } from "./manifest";
-import catalogAggregator from "./lib/catalogAggregator";
 import configManager from "./lib/configManager";
 import {
   getHomePage,
@@ -78,7 +77,7 @@ function getBuilderForUser(userId: string) {
 
       // Find the catalog in the source
       const catalog = source.catalogs.find(
-        (c) => c.type === type && c.id === catalogId
+        (c) => c.type === type && c.id === catalogId,
       );
 
       if (!catalog) {
@@ -149,7 +148,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
+    "Origin, X-Requested-With, Content-Type, Accept",
   );
   next();
 });
@@ -222,7 +221,7 @@ app.get("/:resource/:type/:id.json", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Addon server running at http://localhost:${PORT}`);
   console.log(
-    `Create a new configuration at http://localhost:${PORT}/configure`
+    `Create a new configuration at http://localhost:${PORT}/configure`,
   );
 });
 
