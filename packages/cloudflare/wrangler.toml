@@ -1,0 +1,11 @@
+name = "aiocatalogs"
+main = "packages/cloudflare/index.ts"
+compatibility_date = "2023-09-04"
+
+[vars]
+PORT = "8787"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "aiocatalogs"
+database_id = "placeholder-db-id" # Wird durch 'wrangler d1 create aiocatalogs' befüllt 

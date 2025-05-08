@@ -9,7 +9,9 @@
     "declaration": true,
     "sourceMap": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "lib": ["es2021", "WebWorker", "DOM"],
+    "types": ["@cloudflare/workers-types", "node"]
   },
   "include": ["packages/**/*"],
   "exclude": ["node_modules", "dist"]

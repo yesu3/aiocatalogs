@@ -1,15 +1,13 @@
-import { addonBuilder as StremioAddonBuilder } from "stremio-addon-sdk";
-import configManager from "./lib/configManager";
+import { addonBuilder as StremioAddonBuilder } from 'stremio-addon-sdk';
+import configManager from './lib/configManager';
 
-const ADDON_ID = "org.aiocatalogs";
-const ADDON_VERSION = "1.0.0";
+const ADDON_ID = 'org.aiocatalogs';
+const ADDON_VERSION = '1.0.0';
 
 const buildManifest = (userId: string) => {
   // Get all catalog sources for the user
   const userCatalogs = configManager.getAllCatalogs(userId);
-  console.log(
-    `Building manifest for user ${userId} with ${userCatalogs.length} catalog sources`,
-  );
+  console.log(`Building manifest for user ${userId} with ${userCatalogs.length} catalog sources`);
 
   // Collect all catalogs from all sources
   const allCatalogs = [];
@@ -19,14 +17,12 @@ const buildManifest = (userId: string) => {
   // Collect catalogs, types and resources from all sources
   for (const source of userCatalogs) {
     console.log(
-      `Processing source: ${source.id} (${source.name}) with ${source.catalogs.length} catalogs`,
+      `Processing source: ${source.id} (${source.name}) with ${source.catalogs.length} catalogs`
     );
 
     // Add all catalogs from this source
     for (const catalog of source.catalogs) {
-      console.log(
-        `Adding catalog: ${catalog.type}/${catalog.id} (${catalog.name})`,
-      );
+      console.log(`Adding catalog: ${catalog.type}/${catalog.id} (${catalog.name})`);
 
       allCatalogs.push({
         type: catalog.type,
@@ -46,29 +42,29 @@ const buildManifest = (userId: string) => {
 
   // Default catalog for new users without catalogs
   if (allCatalogs.length === 0) {
-    console.log("No catalogs found, adding default catalog");
+    console.log('No catalogs found, adding default catalog');
 
     allCatalogs.push({
-      type: "movie",
-      id: "aiocatalogs-default",
-      name: "AIO Catalogs (No catalogs added yet)",
+      type: 'movie',
+      id: 'aiocatalogs-default',
+      name: 'AIO Catalogs (No catalogs added yet)',
     });
-    allTypes.add("movie");
-    allResources.add("catalog");
+    allTypes.add('movie');
+    allResources.add('catalog');
   }
 
   console.log(
-    `Final manifest will contain ${allCatalogs.length} catalogs, ${allTypes.size} types, and ${allResources.size} resources`,
+    `Final manifest will contain ${allCatalogs.length} catalogs, ${allTypes.size} types, and ${allResources.size} resources`
   );
 
   // Build the manifest
   const manifest = {
     id: `${ADDON_ID}.${userId}`,
     version: ADDON_VERSION,
-    name: "All-in-one Catalogs",
-    description: "Aggregate multiple Stremio catalogs into one addon",
-    logo: "https://i.imgur.com/mjyzBmX.png",
-    background: "https://i.imgur.com/X9PYlKT.jpg",
+    name: 'All-in-one Catalogs',
+    description: 'Aggregate multiple Stremio catalogs into one addon',
+    logo: 'https://i.imgur.com/mjyzBmX.png',
+    background: 'https://i.imgur.com/X9PYlKT.jpg',
 
     // Resource types supported by this addon (catalog, meta, stream, etc.)
     resources: Array.from(allResources),
@@ -90,5 +86,25 @@ const buildManifest = (userId: string) => {
 
 // Create a new AddonBuilder for a specific user
 export const createAddonBuilder = (userId: string) => {
-  return new StremioAddonBuilder(buildManifest(userId));
+  const builder = new StremioAddonBuilder(buildManifest(userId));
+
+  // Stelle sicher, dass alle Handler definiert sind
+  // Definiere leere Handler für alle Ressourcen
+  builder.defineCatalogHandler(args => {
+    console.log(`Catalog request for type ${args.type}, id ${args.id}`);
+    // Implementiere hier die Katalog-Logik mit userCatalogs
+    return Promise.resolve({ metas: [] });
+  });
+
+  builder.defineMetaHandler(args => {
+    console.log(`Meta request for type ${args.type}, id ${args.id}`);
+    return Promise.resolve({ meta: null });
+  });
+
+  builder.defineStreamHandler(args => {
+    console.log(`Stream request for type ${args.type}, id ${args.id}`);
+    return Promise.resolve({ streams: [] });
+  });
+
+  return builder;
 };

@@ -1,86 +1,140 @@
-# AIO Catalogs - All-in-One Stremio Catalogs
+# AIO Catalogs für Stremio - Cloudflare Workers Edition
 
-A Stremio addon that allows you to combine multiple catalog addons into one, so you don't need to install each catalog separately.
+Ein All-in-One Katalog-Addon für Stremio, das mehrere Katalog-Addons in einem einzigen Addon vereint und auf Cloudflare Workers läuft.
 
 ## Features
 
-- Combine multiple Stremio catalog addons into one
-- **User-specific configurations** - create your own personal collection of catalogs
-- Simple configuration page to add/remove catalogs
-- All catalogs accessible through one addon
-- TypeScript implementation
-- Easy to run locally or deploy
+- Füge mehrere Katalog-Addons aus verschiedenen Quellen in einem einzigen Addon zusammen
+- Benutzerspezifische Konfigurationen, die in einer Cloudflare D1 Datenbank gespeichert werden
+- Schnelle und zuverlässige Ausführung auf Cloudflare's Edge-Netzwerk
+- Keine Server-Wartung notwendig durch serverlose Architektur
 
-## Getting Started
+## Installation und Einrichtung für Entwickler
 
-### Prerequisites
+### Voraussetzungen
 
-- Node.js (14.x or newer)
-- npm
+- Node.js und npm installiert
+- Ein Cloudflare-Konto
+- Wrangler CLI (`npm install -g wrangler`)
 
-### Installation
+### Erste Schritte
 
-1. Clone this repository:
+1. Repository klonen oder herunterladen:
 
-```
-git clone https://github.com/panteLx/aiocatalogs.git
-cd aiocatalogs
-```
+   ```
+   git clone https://github.com/benutzer/aiocatalogs
+   cd aiocatalogs
+   ```
 
-2. Install dependencies:
+2. Abhängigkeiten installieren:
 
-```
-npm install
-```
+   ```
+   npm install
+   ```
 
-3. Start the development server:
+3. Bei Cloudflare anmelden:
 
-```
-npm run dev
-```
+   ```
+   wrangler login
+   ```
 
-4. Open your browser and navigate to:
+4. D1-Datenbank erstellen:
 
-```
-http://localhost:7000/configure
-```
+   ```
+   wrangler d1 create aiocatalogs
+   ```
 
-5. Create a new user configuration or load an existing one
+5. Die zurückgegebene Datenbank-ID in `wrangler.toml` eintragen.
 
-6. Add your catalog manifest URLs in the configuration page
+6. Migrations ausführen:
 
-7. Use the provided Stremio link or QR code to install the addon in Stremio
+   ```
+   wrangler d1 migrations apply aiocatalogs
+   ```
 
-### Building
+7. Lokale Entwicklung starten:
 
-To build the addon for production:
+   ```
+   npm run dev
+   ```
 
-```
-npm run build
-npm run serve
-```
+8. Deployment auf Cloudflare Workers:
+   ```
+   npm run deploy
+   ```
 
-## How It Works
+## Verwendung
 
-1. The addon starts a local web server with a configuration page
-2. You create a personal user configuration (save your User ID!)
-3. You add Stremio catalog addon manifest URLs through the configuration page
-4. The addon aggregates catalogs from all the added addons
-5. When you browse for content in Stremio, the addon fetches data from all configured catalogs
+1. Öffne die Addon-Webseite in deinem Browser (die URL wird nach dem Deployment angezeigt).
 
-## User Configurations
+2. Klicke auf "Create New Configuration" um eine neue Benutzer-ID zu erstellen.
 
-Each user gets a unique ID that is used to manage their specific set of catalogs. Users can:
+3. Füge Katalog-Addons hinzu, indem du deren Manifest-URLs eingibst (z.B. https://mdblist.com/addon/manifest.json).
 
-- Create a new configuration
-- Load an existing configuration using their User ID
-- Add and remove catalogs from their own configuration
-- Share their configuration with others by sharing their unique manifest URL
+4. Installiere das Addon in Stremio mit der angezeigten URL oder dem QR-Code.
 
-## Advanced Configuration
+5. Speichere deine Benutzer-ID, um später darauf zugreifen zu können!
 
-User configurations are stored in the `userConfigs/` directory in the project root, with each user having their own JSON file.
+## Technologie-Stack
 
-## License
+- Cloudflare Workers für serverlose JavaScript/TypeScript-Ausführung
+- Cloudflare D1 für SQLite-kompatible Datenspeicherung
+- Hono.js als Web-Framework
 
-This project is licensed under the MIT License.
+## Migrieren von der Dateisystem-Version
+
+Wenn du von der Dateisystem-Version migrieren möchtest, beachte, dass die Daten nicht automatisch migriert werden. Du musst deine Konfigurationen manuell neu erstellen.
+
+## Lizenz
+
+MIT
+
+## Cloudflare Workers Deployment (Optional)
+
+Das Add-on kann optional auch als Cloudflare Worker mit D1-Datenbank-Integration eingesetzt werden, um ohne eigene Server-Infrastruktur zu arbeiten:
+
+### Voraussetzungen
+
+- Node.js und npm installiert
+- Ein Cloudflare-Konto
+- Wrangler CLI (`npm install -g wrangler`)
+
+### Einrichtung
+
+1. Bei Cloudflare anmelden:
+
+   ```
+   wrangler login
+   ```
+
+2. D1-Datenbank erstellen:
+
+   ```
+   wrangler d1 create aiocatalogs
+   ```
+
+3. Die zurückgegebene Datenbank-ID in `packages/cloudflare/wrangler.toml` eintragen.
+
+4. Migrations ausführen:
+
+   ```
+   wrangler d1 migrations apply aiocatalogs --local
+   ```
+
+5. Lokale Entwicklung starten:
+
+   ```
+   npm run dev:cf
+   ```
+
+6. Deployment auf Cloudflare Workers:
+   ```
+   npm run deploy:cf
+   ```
+
+### Vorteile der Cloudflare-Implementierung
+
+- Keine eigene Server-Infrastruktur notwendig
+- Globales Edge-Netzwerk für bessere Verfügbarkeit
+- Persistente Datenspeicherung in Cloudflare D1
+- Automatische Skalierung

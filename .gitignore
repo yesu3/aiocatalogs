@@ -28,3 +28,6 @@ userConfigs/
 # OS
 .DS_Store
 Thumbs.db 
+
+# Cursor
+.cursor/
