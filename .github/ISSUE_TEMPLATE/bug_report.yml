@@ -4,7 +4,7 @@ title: 'bug: '
 labels:
   - bug
 projects:
-  - panteLx/2
+  - panteLx/3
 body:
   - type: dropdown
     id: 'deployment'

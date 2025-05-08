@@ -4,7 +4,7 @@ title: 'feature request: '
 labels:
   - feature request
 projects:
-  - panteLx/2
+  - panteLx/3
 body:
   - type: checkboxes
     id: '1'
