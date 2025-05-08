@@ -2,9 +2,15 @@ services:
   aiocatalogs:
     container_name: aiocatalogs
     restart: unless-stopped
-    build:
-      context: .
-      dockerfile: Dockerfile
+
+    # Build the image from the Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    # image: aiocatalogs
+
+    # Or use the pre-built image from GitHub Container Registry
+    image: ghcr.io/pantelx/aiocatalogs:latest
     ports:
       - '8787:8787'
     environment:
