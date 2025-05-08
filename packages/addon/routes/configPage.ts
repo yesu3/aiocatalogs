@@ -3,9 +3,15 @@ import configManager from '../lib/configManager';
 import catalogAggregator from '../lib/catalogAggregator';
 import { getConfigPageHTML, convertStremioUrl } from '../../shared/templates/configPage';
 import { clearBuilderCache } from '../server';
+import packageJson from '../../../package.json';
 
 // Router für die Konfigurationsseite
 const router = express.Router();
+
+// Paketversion aus der package.json lesen
+const getPackageVersion = (): string => {
+  return packageJson.version || 'unknown';
+};
 
 // Konfigurationsseite anzeigen
 router.get('/:userId', async (req, res) => {
@@ -24,8 +30,11 @@ router.get('/:userId', async (req, res) => {
     const message = (req.query.message as string) || '';
     const error = (req.query.error as string) || '';
 
+    // Version aus package.json lesen
+    const packageVersion = getPackageVersion();
+
     // HTML rendern
-    res.send(getConfigPageHTML(userId, catalogs, baseUrl, message, error, false));
+    res.send(getConfigPageHTML(userId, catalogs, baseUrl, message, error, false, packageVersion));
   } catch (error) {
     console.error('Error displaying config page:', error);
     res.status(500).send('Internal Server Error');

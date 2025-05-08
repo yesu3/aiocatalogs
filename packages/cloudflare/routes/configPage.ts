@@ -6,6 +6,11 @@ import {
   convertStremioUrl,
 } from '../../shared/templates/configPage';
 
+// Direkte Referenz zur package.json für die Version
+// Dies funktioniert, weil beim Build-Prozess alle Assets gebundelt werden
+import packageJson from '../../../package.json';
+const PACKAGE_VERSION = packageJson.version || 'unknown';
+
 // Konfigurationsseite anzeigen
 export const getConfigPage = async (c: any) => {
   const userId = c.req.param('userId');
@@ -24,7 +29,9 @@ export const getConfigPage = async (c: any) => {
     const error = c.req.query('error') || '';
 
     // HTML als Text zurückgeben
-    return c.html(sharedGetConfigPageHTML(userId, catalogs, baseUrl, message, error, true));
+    return c.html(
+      sharedGetConfigPageHTML(userId, catalogs, baseUrl, message, error, true, PACKAGE_VERSION)
+    );
   } catch (error) {
     console.error('Error displaying config page:', error);
     return c.redirect('/configure?error=Failed to load user configuration');
