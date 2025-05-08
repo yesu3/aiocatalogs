@@ -1,10 +1,10 @@
 {
   "name": "aiocatalogs",
   "version": "1.0.0",
-  "description": "All-in-one catalogs addon for Stremio",
+  "description": "All-in-one catalogs addon for multiple platforms",
   "main": "dist/addon/server.js",
   "scripts": {
-    "start": "npm run build && node dist/addon/server.js",
+    "start": "node dist/addon/server.js",
     "build": "tsc",
     "dev": "ts-node-dev --respawn --transpile-only packages/addon/server.ts",
     "dev:cf": "wrangler dev",
