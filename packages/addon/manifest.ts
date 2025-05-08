@@ -69,7 +69,7 @@ const buildManifest = (userId: string) => {
       version,
       name: 'AIOCatalogs',
       description,
-      logo: 'https://i.imgur.com/mjyzBmX.png',
+      logo: 'https://i.imgur.com/fRPYeIV.png',
       background: 'https://i.imgur.com/QPPXf5T.jpeg',
 
       // Resource types supported by this addon (catalog only)
@@ -97,7 +97,7 @@ const buildManifest = (userId: string) => {
       version,
       name: 'AIOCatalogs',
       description: 'Error loading configuration',
-      logo: 'https://i.imgur.com/mjyzBmX.png',
+      logo: 'https://i.imgur.com/fRPYeIV.png',
       background: 'https://i.imgur.com/QPPXf5T.jpeg',
       resources: ['catalog'],
       types: ['movie'],
@@ -144,7 +144,7 @@ export const createAddonBuilder = (userId: string) => {
                 id: 'setup-required',
                 type: args.type,
                 name: 'Setup Required',
-                poster: 'https://i.imgur.com/QPPXf5T.jpeg',
+                poster: 'https://i.imgur.com/fRPYeIV.png',
                 description: 'Please visit the configuration page to add catalogs.',
               },
             ],

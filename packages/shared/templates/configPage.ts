@@ -52,8 +52,9 @@ export function getConfigPageHTML(
     <html lang="en" class="dark">
       <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>AIO Catalogs Configuration</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title>AIOCatalogs Configuration</title>
+        <link rel="icon" href="https://i.imgur.com/fRPYeIV.png" />
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
           tailwind.config = {

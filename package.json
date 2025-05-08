@@ -1,19 +1,24 @@
 {
   "name": "aiocatalogs",
   "version": "1.0.0",
-  "description": "All-in-one catalogs addon for multiple platforms",
+  "description": "AIOCatalogs is an open-source addon that combines multiple catalog addons into a single one with enhanced performance and a user-friendly configuration interface. It features multi-platform compatibility, serverless deployment options, and an optimized caching system. Join our community on Discord (discord.gg/Ma4SnagqwE) or contribute on GitHub (github.com/panteLx/aiocatalogs)",
   "main": "dist/addon/server.js",
   "scripts": {
     "start": "node dist/addon/server.js",
     "build": "tsc",
     "dev": "ts-node-dev --respawn --transpile-only packages/addon/server.ts",
     "dev:cf": "wrangler dev",
-    "deploy:cf": "wrangler deploy",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy:cf": "npm run build && wrangler deploy",
+    "preview:cf": "npm run build && wrangler versions upload",
+    "test": "vitest run --passWithNoTests",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "release": "bumpp"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=7.0.0"
   },
   "repository": {
     "type": "git",
