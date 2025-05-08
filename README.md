@@ -1,4 +1,4 @@
-<div align="center"><img src="https://i.imgur.com/fRPYeIV.png" alt="AIO Catalogs Logo"></div>
+<div align="center"><img src="https://i.imgur.com/79eCVoA.png" alt="AIO Catalogs Logo"></div>
 <h1 align="center" id="title">AIOCatalogs</h1>
 <div align="center">
 
@@ -22,7 +22,7 @@
 
 **Discord Server:** [Join our Discord for community discussions and support](https://discord.gg/Ma4SnagqwE)
 
-**Self-Hosting:** [Check out the Self-Hosting Guide](#-self-hosting-guide)
+**Self-Hosting:** [Check out the Self-Hosting Guide](#%EF%B8%8F-self-hosting-guide)
 
 **Support the Project:** [Buy Me A Coffee](https://www.buymeacoffee.com/pantel) or [Become a GitHub Sponsor](https://github.com/sponsors/pantelx)
 
