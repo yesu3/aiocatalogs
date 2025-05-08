@@ -1,4 +1,4 @@
-declare module "stremio-addon-sdk" {
+declare module 'stremio-addon-sdk' {
   export class addonBuilder {
     constructor(manifest: any);
     defineMetaHandler(handler: (args: any) => Promise<any>): addonBuilder;
@@ -11,16 +11,10 @@ declare module "stremio-addon-sdk" {
   }
 
   export class serveHTTP {
-    constructor(
-      addonInterface: any,
-      options?: { port?: number; cacheMaxAge?: number },
-    );
+    constructor(addonInterface: any, options?: { port?: number; cacheMaxAge?: number });
     middleware(): any;
     run(): void;
   }
 
-  export function getRouter(
-    addonInterface: any,
-    options?: { cacheMaxAge?: number },
-  ): any;
+  export function getRouter(addonInterface: any, options?: { cacheMaxAge?: number }): any;
 }

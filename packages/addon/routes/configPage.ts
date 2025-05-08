@@ -16,7 +16,9 @@ router.get('/:userId', async (req, res) => {
     const catalogs = configManager.getAllCatalogs(userId);
 
     // Host-URL für Stremio-Links
-    const baseUrl = `${req.headers.host}`;
+    // Protokoll und Host korrekt setzen für lokale Entwicklung
+    const host = req.headers.host || 'localhost:7000';
+    const baseUrl = `${req.protocol === 'https' ? 'https' : 'http'}://${host}`;
 
     // Optionale Nachrichten
     const message = (req.query.message as string) || '';

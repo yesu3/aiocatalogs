@@ -1,13 +1,13 @@
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
-import { UserConfig, CatalogManifest } from "../types";
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import { UserConfig, CatalogManifest } from '../types';
 
 class ConfigManager {
   private configsPath: string;
   private configs: Map<string, UserConfig>;
 
-  constructor(configsPath: string = path.join(process.cwd(), "userConfigs")) {
+  constructor(configsPath: string = path.join(process.cwd(), 'userConfigs')) {
     this.configsPath = configsPath;
     this.configs = new Map();
 
@@ -36,12 +36,10 @@ class ConfigManager {
 
     try {
       if (fs.existsSync(configPath)) {
-        const configData = fs.readFileSync(configPath, "utf8");
+        const configData = fs.readFileSync(configPath, 'utf8');
         const config = JSON.parse(configData);
         console.log(
-          `Loaded config for user ${userId} with ${
-            config.catalogs?.length || 0
-          } catalogs`,
+          `Loaded config for user ${userId} with ${config.catalogs?.length || 0} catalogs`
         );
 
         this.configs.set(userId, config);
@@ -61,9 +59,7 @@ class ConfigManager {
   // Save the configuration for a specific user
   saveConfig(userId: string): boolean {
     if (!this.configs.has(userId)) {
-      console.error(
-        `Cannot save config for user ${userId}: config not found in memory`,
-      );
+      console.error(`Cannot save config for user ${userId}: config not found in memory`);
       return false;
     }
 
@@ -72,7 +68,7 @@ class ConfigManager {
 
     try {
       console.log(
-        `Saving config for user ${userId} with ${config.catalogs.length} catalogs to ${configPath}`,
+        `Saving config for user ${userId} with ${config.catalogs.length} catalogs to ${configPath}`
       );
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       return true;
@@ -93,9 +89,7 @@ class ConfigManager {
     const config = this.loadConfig(userId);
 
     // Check if a catalog with the same ID already exists
-    const existingIndex = config.catalogs.findIndex(
-      (c) => c.id === manifest.id,
-    );
+    const existingIndex = config.catalogs.findIndex(c => c.id === manifest.id);
 
     if (existingIndex >= 0) {
       console.log(`Updating existing catalog at index ${existingIndex}`);
@@ -107,9 +101,7 @@ class ConfigManager {
 
     const success = this.saveConfig(userId);
     if (success) {
-      console.log(
-        `Successfully saved config with ${config.catalogs.length} catalogs`,
-      );
+      console.log(`Successfully saved config with ${config.catalogs.length} catalogs`);
     } else {
       console.error(`Failed to save config`);
     }
@@ -123,10 +115,8 @@ class ConfigManager {
     const config = this.loadConfig(userId);
     const initialLength = config.catalogs.length;
 
-    config.catalogs = config.catalogs.filter((c) => c.id !== id);
-    console.log(
-      `After removal: ${config.catalogs.length} catalogs (was ${initialLength})`,
-    );
+    config.catalogs = config.catalogs.filter(c => c.id !== id);
+    console.log(`After removal: ${config.catalogs.length} catalogs (was ${initialLength})`);
 
     if (initialLength !== config.catalogs.length) {
       return this.saveConfig(userId);
@@ -138,15 +128,13 @@ class ConfigManager {
   // Get a specific catalog for a user
   getCatalog(userId: string, id: string): CatalogManifest | undefined {
     const config = this.loadConfig(userId);
-    return config.catalogs.find((c) => c.id === id);
+    return config.catalogs.find(c => c.id === id);
   }
 
   // Get all catalogs for a user
   getAllCatalogs(userId: string): CatalogManifest[] {
     const config = this.loadConfig(userId);
-    console.log(
-      `Getting all catalogs for user ${userId}: found ${config.catalogs.length}`,
-    );
+    console.log(`Getting all catalogs for user ${userId}: found ${config.catalogs.length}`);
     return config.catalogs;
   }
 
@@ -163,13 +151,13 @@ class ConfigManager {
     try {
       const files = fs.readdirSync(this.configsPath);
       const users = files
-        .filter((file) => file.endsWith(".json"))
-        .map((file) => file.replace(".json", ""));
+        .filter(file => file.endsWith('.json'))
+        .map(file => file.replace('.json', ''));
 
       console.log(`Found ${users.length} users in ${this.configsPath}`);
       return users;
     } catch (error) {
-      console.error("Error listing users:", error);
+      console.error('Error listing users:', error);
       return [];
     }
   }

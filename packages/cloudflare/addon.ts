@@ -1,5 +1,6 @@
-import { CatalogManifest, CatalogRequest, CatalogResponse, D1Database, MetaItem } from './types';
+import { CatalogRequest, CatalogResponse, D1Database, MetaItem } from './types';
 import { configManager } from './configManager';
+import { version, description } from '../../package.json';
 
 // Cache für Builder um Mehrfacherstellung zu vermeiden
 const addonCache = new Map();
@@ -8,9 +9,9 @@ const addonCache = new Map();
 function buildManifest(userId: string) {
   return {
     id: `aio-catalogs-${userId}`,
-    version: '1.0.0',
-    name: 'All-in-One Catalogs',
-    description: 'Access multiple catalogs from different sources in one addon',
+    version,
+    name: 'AIOCatalogs',
+    description,
     resources: ['catalog'],
     types: ['movie', 'series'],
     catalogs: [] as Array<{ id: string; type: string; name: string }>,

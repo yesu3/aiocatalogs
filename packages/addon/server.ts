@@ -11,6 +11,13 @@ const port = process.env.PORT || 7000;
 // Express-App erstellen
 const app = express();
 
+// CORS-Header für Stremio-Anfragen hinzufügen
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
 // Middleware für JSON und URL-encodierte Formulardaten
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -82,19 +89,33 @@ app.use('/configure', configRoutes);
 app.get('/manifest.json', (req, res) => {
   const userId = (req.query.userId as string) || 'default';
 
-  // Builder aus Cache holen oder neu erstellen
-  let builder;
+  try {
+    // Builder aus Cache holen oder neu erstellen
+    let builder;
 
-  if (builderCache.has(userId)) {
-    builder = builderCache.get(userId);
-  } else {
-    const catalogs = configManager.getAllCatalogs(userId);
-    builder = createAddonBuilder(userId);
-    builderCache.set(userId, builder);
+    if (builderCache.has(userId)) {
+      builder = builderCache.get(userId);
+    } else {
+      builder = createAddonBuilder(userId);
+      builderCache.set(userId, builder);
+    }
+
+    // Stremio SDK verwendet getInterface() um das Interface und Manifest zu bekommen
+    const addonInterface = builder.getInterface();
+
+    // Logging für Debug-Zwecke
+    console.log(
+      'Sending manifest (first 200 chars):',
+      JSON.stringify(addonInterface.manifest).substring(0, 200) + '...'
+    );
+
+    // Explizit Header setzen und Manifest senden
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.status(200).send(JSON.stringify(addonInterface.manifest));
+  } catch (error) {
+    console.error('Error generating manifest:', error);
+    res.status(500).json({ error: 'Failed to generate manifest' });
   }
-
-  res.setHeader('Content-Type', 'application/json');
-  res.send(builder.manifest);
 });
 
 // Handler für Stremio-Endpunkte
@@ -102,55 +123,48 @@ app.get('/:resource/:type/:id.json', (req, res) => {
   const { resource, type, id } = req.params;
   const userId = (req.query.userId as string) || 'default';
 
-  // Builder aus Cache holen oder neu erstellen
-  let builder;
-
-  if (builderCache.has(userId)) {
-    builder = builderCache.get(userId);
-  } else {
-    const catalogs = configManager.getAllCatalogs(userId);
-    builder = createAddonBuilder(userId);
-    builderCache.set(userId, builder);
-  }
-
-  // Je nach Ressource Endpoint auswählen
-  let handler;
-
-  switch (resource) {
-    case 'catalog':
-      handler = builder.catalogHandler;
-      break;
-    case 'meta':
-      handler = builder.metaHandler;
-      break;
-    case 'stream':
-      handler = builder.streamHandler;
-      break;
-    default:
-      res.status(404).json({ error: 'resource not found' });
+  try {
+    // Nur catalog-Anfragen bearbeiten, andere mit Fehler beantworten
+    if (resource !== 'catalog') {
+      res.status(404).json({ error: 'Resource not supported' });
       return;
-  }
+    }
 
-  // Prüfen, ob der Handler existiert und eine Funktion ist
-  if (!handler || typeof handler !== 'function') {
-    console.error(`Handler for ${resource} not found or not a function`);
-    res.status(501).json({ error: `${resource} not implemented` });
-    return;
-  }
+    // Builder aus Cache holen oder neu erstellen
+    let builder;
 
-  handler({ type, id })
-    .then((result: unknown) => {
-      res.setHeader('Content-Type', 'application/json');
-      res.send(result);
-    })
-    .catch((error: Error) => {
-      console.error(`Error handling ${resource} request:`, error);
-      res.status(500).json({ error: 'internal error' });
-    });
+    if (builderCache.has(userId)) {
+      builder = builderCache.get(userId);
+    } else {
+      builder = createAddonBuilder(userId);
+      builderCache.set(userId, builder);
+    }
+
+    // Addon Interface holen
+    const addonInterface = builder.getInterface();
+
+    // Catalog-Methode aus Interface aufrufen - KORRIGIERT
+    // Die Stremio SDK stellt eine get() Methode zur Verfügung
+    addonInterface
+      .get(resource, type, id)
+      .then((result: unknown) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.json(result);
+      })
+      .catch((error: Error) => {
+        console.error(`Error handling ${resource} request:`, error);
+        res.status(500).json({ error: 'internal error' });
+      });
+  } catch (error) {
+    console.error(`Error in ${req.params.resource} endpoint:`, error);
+    res.status(500).json({ error: 'internal server error' });
+  }
 });
 
 // Server starten
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`Open http://localhost:${port} in your browser`);
+const portNumber = typeof port === 'string' ? parseInt(port, 10) : port;
+app.listen(portNumber, '0.0.0.0', () => {
+  console.log(`Server running at http://localhost:${portNumber}`);
+  console.log(`Manifest URL: http://localhost:${portNumber}/manifest.json`);
+  console.log(`Open http://localhost:${portNumber} in your browser to configure`);
 });
