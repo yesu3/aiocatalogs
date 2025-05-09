@@ -53,9 +53,13 @@ app.get('/configure', (req, res) => {
     return res.redirect(`/configure/${userId}`);
   }
 
+  // Get message and error parameters
+  const message = (req.query.message as string) || '';
+  const error = (req.query.error as string) || '';
+
   // Otherwise display the home page
   res.setHeader('Content-Type', 'text/html');
-  res.send(getHomePageHTML());
+  res.send(getHomePageHTML(message, error));
 });
 
 // Create new user
@@ -72,11 +76,11 @@ app.post('/configure/load', (req, res) => {
   const userId = req.body.userId;
 
   if (!userId) {
-    return res.status(400).send('User ID is required');
+    return res.redirect('/configure?error=User ID is required');
   }
 
   if (!configManager.userExists(userId)) {
-    return res.status(404).send('User not found');
+    return res.redirect('/configure?error=User not found');
   }
 
   res.redirect(`/configure/${userId}`);

@@ -87,7 +87,9 @@ export function getConfigPageHTML(
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <title>AIOCatalogs - Configuration</title>
         <link rel="icon" href="https://i.imgur.com/fRPYeIV.png" />
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
         <script src="https://cdn.tailwindcss.com"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
         <script>
           tailwind.config = {
             darkMode: 'class',
@@ -166,16 +168,7 @@ export function getConfigPageHTML(
             </p>
           </header>
 
-          ${
-            message
-              ? `<div class="p-4 mb-6 border rounded-lg bg-primary/10 border-primary text-primary">${message}</div>`
-              : ''
-          }
-          ${
-            error
-              ? `<div class="p-4 mb-6 border rounded-lg bg-destructive/10 border-destructive text-destructive">${error}</div>`
-              : ''
-          }
+          <div id="notifications"></div>
 
           <!-- Sponsor-Button prominently placed -->
           <div class="mb-8 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500 flex flex-col sm:flex-row items-center justify-between">
@@ -342,8 +335,33 @@ export function getConfigPageHTML(
         <script>
           function copyToClipboard(text) {
             navigator.clipboard.writeText(text);
-            alert('Copied to clipboard!');
+            showToast('Copied to clipboard!', 'success');
           }
+
+          // Toast notification function
+          function showToast(message, type) {
+            const bgColor = type === 'success' ? 'linear-gradient(to right, #0cce6b, #0caa57)' : 
+                           type === 'error' ? 'linear-gradient(to right, #e53935, #c62828)' : 
+                           'linear-gradient(to right, #2196f3, #1976d2)';
+            
+            Toastify({
+              text: message,
+              duration: 3000,
+              gravity: "top",
+              position: "right",
+              style: {
+                background: bgColor,
+                borderRadius: "8px",
+              },
+              stopOnFocus: true,
+            }).showToast();
+          }
+
+          // Show toasts if there are messages or errors
+          document.addEventListener('DOMContentLoaded', function() {
+            ${message ? `showToast("${message}", "success");` : ''}
+            ${error ? `showToast("${error}", "error");` : ''}
+          });
         </script>
       </body>
     </html>
@@ -353,7 +371,7 @@ export function getConfigPageHTML(
 /**
  * Creates the HTML for the home page
  */
-export function getHomePageHTML() {
+export function getHomePageHTML(message: string = '', error: string = '') {
   return `
     <!DOCTYPE html>
     <html lang="en" class="dark">
@@ -361,7 +379,9 @@ export function getHomePageHTML() {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>AIO Catalogs</title>
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
         <script src="https://cdn.tailwindcss.com"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
         <script>
           tailwind.config = {
             darkMode: 'class',
@@ -435,6 +455,8 @@ export function getHomePageHTML() {
             All-in-One Catalogs - User Selection
           </h1>
 
+          <div id="notifications"></div>
+
           <div class="grid gap-8 md:grid-cols-2 max-w-3xl mx-auto">
             <div class="rounded-lg border bg-card p-6 shadow-sm">
               <h2 class="text-xl font-semibold mb-4">New User</h2>
@@ -477,6 +499,33 @@ export function getHomePageHTML() {
             </div>
           </div>
         </div>
+
+        <script>
+          // Toast notification function
+          function showToast(message, type) {
+            const bgColor = type === 'success' ? 'linear-gradient(to right, #0cce6b, #0caa57)' : 
+                           type === 'error' ? 'linear-gradient(to right, #e53935, #c62828)' : 
+                           'linear-gradient(to right, #2196f3, #1976d2)';
+            
+            Toastify({
+              text: message,
+              duration: 3000,
+              gravity: "top",
+              position: "right",
+              style: {
+                background: bgColor,
+                borderRadius: "8px",
+              },
+              stopOnFocus: true,
+            }).showToast();
+          }
+
+          // Show toasts if there are messages or errors
+          document.addEventListener('DOMContentLoaded', function() {
+            ${message ? `showToast("${message}", "success");` : ''}
+            ${error ? `showToast("${error}", "error");` : ''}
+          });
+        </script>
       </body>
     </html>
   `;
