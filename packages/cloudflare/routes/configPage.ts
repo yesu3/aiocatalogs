@@ -98,3 +98,47 @@ export const removeCatalog = async (c: any) => {
     return c.redirect(`/configure/${userId}?error=Failed to remove catalog`);
   }
 };
+
+// Move catalog up
+export const moveCatalogUp = async (c: any) => {
+  const userId = c.req.param('userId');
+  const formData = await c.req.formData();
+  const catalogId = formData.get('catalogId') as string;
+
+  // Check if user exists
+  const exists = await configManager.userExists(userId);
+  if (!exists) {
+    return c.text('User not found', 404);
+  }
+
+  const success = await configManager.moveCatalogUp(userId, catalogId);
+
+  if (success) {
+    // Clear cache
+    return c.redirect(`/configure/${userId}?message=Catalog moved up successfully`);
+  } else {
+    return c.redirect(`/configure/${userId}?error=Failed to move catalog up`);
+  }
+};
+
+// Move catalog down
+export const moveCatalogDown = async (c: any) => {
+  const userId = c.req.param('userId');
+  const formData = await c.req.formData();
+  const catalogId = formData.get('catalogId') as string;
+
+  // Check if user exists
+  const exists = await configManager.userExists(userId);
+  if (!exists) {
+    return c.text('User not found', 404);
+  }
+
+  const success = await configManager.moveCatalogDown(userId, catalogId);
+
+  if (success) {
+    // Clear cache
+    return c.redirect(`/configure/${userId}?message=Catalog moved down successfully`);
+  } else {
+    return c.redirect(`/configure/${userId}?error=Failed to move catalog down`);
+  }
+};

@@ -59,7 +59,13 @@ app.post('/configure/load', async c => {
 });
 
 // Configuration page (imported from separate file)
-import { getConfigPage, addCatalog, removeCatalog } from './routes/configPage';
+import {
+  getConfigPage,
+  addCatalog,
+  removeCatalog,
+  moveCatalogUp,
+  moveCatalogDown,
+} from './routes/configPage';
 
 app.get('/configure/:userId', async c => {
   initConfigManager(c);
@@ -74,6 +80,16 @@ app.post('/configure/:userId/add', async c => {
 app.post('/configure/:userId/remove', async c => {
   initConfigManager(c);
   return removeCatalog(c);
+});
+
+app.post('/configure/:userId/moveUp', async c => {
+  initConfigManager(c);
+  return moveCatalogUp(c);
+});
+
+app.post('/configure/:userId/moveDown', async c => {
+  initConfigManager(c);
+  return moveCatalogDown(c);
 });
 
 // Manifest.json with userId as query parameter
