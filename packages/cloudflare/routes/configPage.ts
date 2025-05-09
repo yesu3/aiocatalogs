@@ -24,7 +24,8 @@ export const getConfigPage = async (c: any) => {
     // Konfiguration laden
     const catalogs = await configManager.getAllCatalogs(userId);
     const url = new URL(c.req.url);
-    const baseUrl = url.host;
+    const baseUrlHost = url.host;
+    const baseUrl = `${url.protocol === 'https' ? 'https' : 'http'}://${baseUrlHost}`;
     const message = c.req.query('message') || '';
     const error = c.req.query('error') || '';
 

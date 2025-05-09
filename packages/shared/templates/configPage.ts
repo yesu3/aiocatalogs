@@ -54,7 +54,7 @@ export function getConfigPageHTML(
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <title>AIOCatalogs Configuration</title>
+        <title>AIOCatalogs - Configuration</title>
         <link rel="icon" href="https://i.imgur.com/fRPYeIV.png" />
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
@@ -128,7 +128,7 @@ export function getConfigPageHTML(
         <div class="container py-10">
           <header class="mb-10">
             <h1 class="text-3xl font-bold tracking-tight mb-2">
-              All-in-One Catalogs Configuration
+              All-in-One Catalogs - Configuration
             </h1>
             <p class="text-lg text-muted-foreground">
               Your unique user ID: <span class="font-medium text-primary">${userId}</span> (save this ID to access your catalogs later)
@@ -401,7 +401,7 @@ export function getHomePageHTML() {
       <body class="min-h-screen bg-background text-foreground bg-card-pattern">
         <div class="container py-16">
           <h1 class="text-4xl font-bold tracking-tight text-center mb-10">
-            All-in-One Catalogs for Stremio
+            All-in-One Catalogs - User Selection
           </h1>
 
           <div class="grid gap-8 md:grid-cols-2 max-w-3xl mx-auto">
