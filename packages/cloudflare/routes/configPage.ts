@@ -1,10 +1,14 @@
 import { configManager } from '../configManager';
 import { catalogAggregator } from '../catalogAggregator';
-import { CatalogManifest } from '../types';
+import { getConfigPageHTML } from '../../shared/templates/configPage';
 import {
-  getConfigPageHTML as sharedGetConfigPageHTML,
+  handleAddCatalog,
+  handleRemoveCatalog,
+  handleMoveCatalogUp,
+  handleMoveCatalogDown,
   convertStremioUrl,
-} from '../../shared/templates/configPage';
+} from '../../shared/routes/configPageHandlers';
+import { clearAddonCache } from '../addon';
 
 // Direct reference to package.json for version
 // This works because all assets are bundled during the build process
@@ -31,13 +35,14 @@ export const getConfigPage = async (c: any) => {
     const catalogs = await configManager.getAllCatalogs(userId);
     const url = new URL(c.req.url);
     const baseUrlHost = url.host;
-    const baseUrl = `${url.protocol === 'https' ? 'https' : 'http'}://${baseUrlHost}`;
+    // const baseUrl = `${url.protocol === 'https' ? 'https' : 'http'}://${baseUrlHost}`;
+    const baseUrl = `${url.protocol}//${baseUrlHost}`;
     const message = c.req.query('message') || '';
     const error = c.req.query('error') || '';
 
     // Return HTML as text
     return c.html(
-      sharedGetConfigPageHTML(userId, catalogs, baseUrl, message, error, true, PACKAGE_VERSION)
+      getConfigPageHTML(userId, catalogs, baseUrl, message, error, true, PACKAGE_VERSION)
     );
   } catch (error) {
     console.error('Error displaying config page:', error);
@@ -60,20 +65,18 @@ export const addCatalog = async (c: any) => {
   // Convert stremio:// URL to https:// if necessary
   const catalogUrl = convertStremioUrl(rawCatalogUrl);
 
-  try {
-    console.log('Fetching manifest from:', catalogUrl);
-    const manifest = await catalogAggregator.fetchCatalogManifest(catalogUrl);
+  const result = await handleAddCatalog(
+    userId,
+    catalogUrl,
+    url => catalogAggregator.fetchCatalogManifest(url),
+    (userId, manifest) => configManager.addCatalog(userId, manifest),
+    userId => clearAddonCache(userId)
+  );
 
-    if (manifest) {
-      await configManager.addCatalog(userId, manifest);
-      // Clear cache
-      return c.redirect(`/configure/${userId}?message=Catalog added successfully`);
-    } else {
-      return c.redirect(`/configure/${userId}?error=Failed to fetch catalog manifest`);
-    }
-  } catch (error) {
-    console.error('Error adding catalog:', error);
-    return c.redirect(`/configure/${userId}?error=Failed to add catalog`);
+  if (result.success) {
+    return c.redirect(`/configure/${userId}?message=${result.message}`);
+  } else {
+    return c.redirect(`/configure/${userId}?error=${result.error}`);
   }
 };
 
@@ -89,13 +92,17 @@ export const removeCatalog = async (c: any) => {
     return c.text('User not found', 404);
   }
 
-  const success = await configManager.removeCatalog(userId, catalogId);
+  const result = await handleRemoveCatalog(
+    userId,
+    catalogId,
+    (userId, catalogId) => configManager.removeCatalog(userId, catalogId),
+    userId => clearAddonCache(userId)
+  );
 
-  if (success) {
-    // Clear cache
-    return c.redirect(`/configure/${userId}?message=Catalog removed successfully`);
+  if (result.success) {
+    return c.redirect(`/configure/${userId}?message=${result.message}`);
   } else {
-    return c.redirect(`/configure/${userId}?error=Failed to remove catalog`);
+    return c.redirect(`/configure/${userId}?error=${result.error}`);
   }
 };
 
@@ -111,13 +118,17 @@ export const moveCatalogUp = async (c: any) => {
     return c.text('User not found', 404);
   }
 
-  const success = await configManager.moveCatalogUp(userId, catalogId);
+  const result = await handleMoveCatalogUp(
+    userId,
+    catalogId,
+    (userId, catalogId) => configManager.moveCatalogUp(userId, catalogId),
+    userId => clearAddonCache(userId)
+  );
 
-  if (success) {
-    // Clear cache
-    return c.redirect(`/configure/${userId}?message=Catalog moved up successfully`);
+  if (result.success) {
+    return c.redirect(`/configure/${userId}?message=${result.message}`);
   } else {
-    return c.redirect(`/configure/${userId}?error=Failed to move catalog up`);
+    return c.redirect(`/configure/${userId}?error=${result.error}`);
   }
 };
 
@@ -133,12 +144,16 @@ export const moveCatalogDown = async (c: any) => {
     return c.text('User not found', 404);
   }
 
-  const success = await configManager.moveCatalogDown(userId, catalogId);
+  const result = await handleMoveCatalogDown(
+    userId,
+    catalogId,
+    (userId, catalogId) => configManager.moveCatalogDown(userId, catalogId),
+    userId => clearAddonCache(userId)
+  );
 
-  if (success) {
-    // Clear cache
-    return c.redirect(`/configure/${userId}?message=Catalog moved down successfully`);
+  if (result.success) {
+    return c.redirect(`/configure/${userId}?message=${result.message}`);
   } else {
-    return c.redirect(`/configure/${userId}?error=Failed to move catalog down`);
+    return c.redirect(`/configure/${userId}?error=${result.error}`);
   }
 };

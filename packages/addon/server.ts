@@ -86,7 +86,7 @@ app.post('/configure/load', (req, res) => {
 app.use('/configure', configRoutes);
 
 // Handler for /manifest.json
-app.get('/manifest.json', (req, res) => {
+app.get('/manifest.json', async (req, res) => {
   const userId = (req.query.userId as string) || 'default';
 
   try {
@@ -96,7 +96,7 @@ app.get('/manifest.json', (req, res) => {
     if (builderCache.has(userId)) {
       builder = builderCache.get(userId);
     } else {
-      builder = createAddonBuilder(userId);
+      builder = await createAddonBuilder(userId);
       builderCache.set(userId, builder);
     }
 
@@ -119,7 +119,7 @@ app.get('/manifest.json', (req, res) => {
 });
 
 // Handler for Stremio endpoints
-app.get('/:resource/:type/:id.json', (req, res) => {
+app.get('/:resource/:type/:id.json', async (req, res) => {
   const { resource, type, id } = req.params;
   const userId = (req.query.userId as string) || 'default';
 
@@ -136,7 +136,7 @@ app.get('/:resource/:type/:id.json', (req, res) => {
     if (builderCache.has(userId)) {
       builder = builderCache.get(userId);
     } else {
-      builder = createAddonBuilder(userId);
+      builder = await createAddonBuilder(userId);
       builderCache.set(userId, builder);
     }
 

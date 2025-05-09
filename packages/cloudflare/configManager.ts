@@ -1,12 +1,13 @@
-import { UserConfig, CatalogManifest, D1Database } from './types';
+import { UserConfig, CatalogManifest } from '../types';
+import { D1Database } from './types';
 import { randomUUID } from 'crypto';
+import { BaseConfigManager } from '../shared/configManager';
 
-class ConfigManager {
+class CloudflareConfigManager extends BaseConfigManager {
   private db: D1Database | null = null;
-  private cache: Map<string, UserConfig> = new Map();
 
   constructor() {
-    this.cache = new Map();
+    super();
   }
 
   // Set database
@@ -136,113 +137,7 @@ class ConfigManager {
     }
   }
 
-  // Get configuration for a specific user
-  async getConfig(userId: string): Promise<UserConfig> {
-    return this.loadConfig(userId);
-  }
-
-  // Add a catalog for a specific user
-  async addCatalog(userId: string, manifest: CatalogManifest): Promise<boolean> {
-    console.log(`Adding catalog ${manifest.id} to user ${userId}`);
-    const config = await this.loadConfig(userId);
-
-    // Check if a catalog with the same ID already exists
-    const existingIndex = config.catalogs.findIndex(c => c.id === manifest.id);
-
-    if (existingIndex >= 0) {
-      console.log(`Updating existing catalog at index ${existingIndex}`);
-      config.catalogs[existingIndex] = manifest;
-    } else {
-      console.log(`Adding new catalog to list`);
-      config.catalogs.push(manifest);
-    }
-
-    const success = await this.saveConfig(userId, config);
-    if (success) {
-      console.log(`Successfully saved config with ${config.catalogs.length} catalogs`);
-    } else {
-      console.error(`Failed to save config`);
-    }
-
-    return success;
-  }
-
-  // Remove a catalog for a specific user
-  async removeCatalog(userId: string, id: string): Promise<boolean> {
-    console.log(`Removing catalog ${id} from user ${userId}`);
-    const config = await this.loadConfig(userId);
-    const initialLength = config.catalogs.length;
-
-    config.catalogs = config.catalogs.filter(c => c.id !== id);
-    console.log(`After removal: ${config.catalogs.length} catalogs (was ${initialLength})`);
-
-    if (initialLength !== config.catalogs.length) {
-      return this.saveConfig(userId, config);
-    }
-
-    return false;
-  }
-
-  // Move a catalog up in the list for a specific user
-  async moveCatalogUp(userId: string, id: string): Promise<boolean> {
-    console.log(`Moving catalog ${id} up for user ${userId}`);
-    const config = await this.loadConfig(userId);
-
-    // Find the index of the catalog
-    const index = config.catalogs.findIndex(c => c.id === id);
-
-    // If catalog not found or already at the top, do nothing
-    if (index <= 0) {
-      console.log(`Catalog ${id} not found or already at the top`);
-      return false;
-    }
-
-    // Swap the catalog with the one above it
-    const temp = config.catalogs[index];
-    config.catalogs[index] = config.catalogs[index - 1];
-    config.catalogs[index - 1] = temp;
-
-    console.log(`Moved catalog ${id} from position ${index} to ${index - 1}`);
-    return this.saveConfig(userId, config);
-  }
-
-  // Move a catalog down in the list for a specific user
-  async moveCatalogDown(userId: string, id: string): Promise<boolean> {
-    console.log(`Moving catalog ${id} down for user ${userId}`);
-    const config = await this.loadConfig(userId);
-
-    // Find the index of the catalog
-    const index = config.catalogs.findIndex(c => c.id === id);
-
-    // If catalog not found or already at the bottom, do nothing
-    if (index === -1 || index >= config.catalogs.length - 1) {
-      console.log(`Catalog ${id} not found or already at the bottom`);
-      return false;
-    }
-
-    // Swap the catalog with the one below it
-    const temp = config.catalogs[index];
-    config.catalogs[index] = config.catalogs[index + 1];
-    config.catalogs[index + 1] = temp;
-
-    console.log(`Moved catalog ${id} from position ${index} to ${index + 1}`);
-    return this.saveConfig(userId, config);
-  }
-
-  // Get a specific catalog for a user
-  async getCatalog(userId: string, id: string): Promise<CatalogManifest | undefined> {
-    const config = await this.loadConfig(userId);
-    return config.catalogs.find(c => c.id === id);
-  }
-
-  // Get all catalogs for a user
-  async getAllCatalogs(userId: string): Promise<CatalogManifest[]> {
-    const config = await this.loadConfig(userId);
-    console.log(`Getting all catalogs for user ${userId}: found ${config.catalogs.length}`);
-    return config.catalogs;
-  }
-
-  // Check if a user exists
+  // Check if user exists
   async userExists(userId: string): Promise<boolean> {
     if (!this.db) {
       throw new Error('Database not initialized');
@@ -257,16 +152,14 @@ class ConfigManager {
         .bind(userId)
         .first();
 
-      const exists = !!result;
-      console.log(`Checking if user ${userId} exists: ${exists}`);
-      return exists;
+      return !!result;
     } catch (error) {
       console.error(`Error checking if user ${userId} exists:`, error);
       return false;
     }
   }
 
-  // List all users
+  // Get all users
   async getAllUsers(): Promise<string[]> {
     if (!this.db) {
       throw new Error('Database not initialized');
@@ -276,37 +169,23 @@ class ConfigManager {
       // Initialize the database if not already done
       await this.initDatabase();
 
-      const results = await this.db
-        .prepare('SELECT user_id FROM user_configs ORDER BY updated_at DESC')
+      const result = await this.db
+        .prepare('SELECT user_id FROM user_configs ORDER BY created_at DESC')
         .all();
 
-      if (results && results.results) {
-        const users = results.results.map((row: any) => row.user_id as string);
-        console.log(`Found ${users.length} users in database`);
+      if (result && result.results) {
+        const users = result.results.map((row: any) => row.user_id);
+        console.log(`Retrieved ${users.length} users`);
         return users;
       }
 
       return [];
     } catch (error) {
-      console.error('Error listing users:', error);
+      console.error('Error getting all users:', error);
       return [];
     }
   }
-
-  // Clear cache for a user
-  clearCache(userId: string) {
-    if (this.cache.has(userId)) {
-      console.log(`Clearing cache for user ${userId}`);
-      this.cache.delete(userId);
-    }
-  }
-
-  // Clear all cache
-  clearAllCache() {
-    console.log('Clearing entire cache');
-    this.cache.clear();
-  }
 }
 
-// Create and export a singleton instance
-export const configManager = new ConfigManager();
+// Export a singleton instance
+export const configManager = new CloudflareConfigManager();

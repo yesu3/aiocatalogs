@@ -1,9 +1,16 @@
 import express from 'express';
 import configManager from '../lib/configManager';
 import catalogAggregator from '../lib/catalogAggregator';
-import { getConfigPageHTML, convertStremioUrl } from '../../shared/templates/configPage';
+import { getConfigPageHTML } from '../../shared/templates/configPage';
 import { clearBuilderCache } from '../server';
 import packageJson from '../../../package.json';
+import {
+  handleAddCatalog,
+  handleRemoveCatalog,
+  handleMoveCatalogUp,
+  handleMoveCatalogDown,
+  convertStremioUrl,
+} from '../../shared/routes/configPageHandlers';
 
 // Router for the configuration page
 const router = express.Router();
@@ -24,12 +31,13 @@ router.get('/:userId', async (req, res) => {
 
   try {
     // Load configuration
-    const catalogs = configManager.getAllCatalogs(userId);
+    const catalogs = await configManager.getAllCatalogs(userId);
 
     // Host URL for Stremio links
     // Set protocol and host correctly for local development
     const host = req.headers.host || 'localhost:7000';
-    const baseUrl = `${req.protocol === 'https' ? 'https' : 'http'}://${host}`;
+    // const baseUrl = `${req.protocol === 'https' ? 'https' : 'http'}://${host}`;
+    const baseUrl = `${req.protocol}://${host}`;
 
     // Optional messages
     const message = (req.query.message as string) || '';
@@ -55,23 +63,21 @@ router.post('/:userId/add', async (req, res) => {
     return res.redirect(`/configure/${userId}?error=Catalog URL is required`);
   }
 
-  try {
-    // Convert stremio:// URL to https:// if necessary
-    const normalizedUrl = convertStremioUrl(catalogUrl);
+  // Convert stremio:// URL to https:// if necessary
+  const normalizedUrl = convertStremioUrl(catalogUrl);
 
-    console.log(`Fetching catalog manifest from ${normalizedUrl}`);
-    const manifest = await catalogAggregator.fetchCatalogManifest(normalizedUrl);
+  const result = await handleAddCatalog(
+    userId,
+    normalizedUrl,
+    url => catalogAggregator.fetchCatalogManifest(url),
+    (userId, manifest) => Promise.resolve(configManager.addCatalog(userId, manifest)),
+    userId => clearBuilderCache(userId)
+  );
 
-    if (manifest) {
-      configManager.addCatalog(userId, manifest);
-      clearBuilderCache(userId); // Clear cache after adding a catalog
-      return res.redirect(`/configure/${userId}?message=Catalog added successfully`);
-    } else {
-      return res.redirect(`/configure/${userId}?error=Failed to fetch catalog manifest`);
-    }
-  } catch (error) {
-    console.error('Error adding catalog:', error);
-    return res.redirect(`/configure/${userId}?error=Failed to add catalog`);
+  if (result.success) {
+    return res.redirect(`/configure/${userId}?message=${result.message}`);
+  } else {
+    return res.redirect(`/configure/${userId}?error=${result.error}`);
   }
 });
 
@@ -84,18 +90,17 @@ router.post('/:userId/remove', async (req, res) => {
     return res.redirect(`/configure/${userId}?error=Catalog ID is required`);
   }
 
-  try {
-    const success = configManager.removeCatalog(userId, catalogId);
+  const result = await handleRemoveCatalog(
+    userId,
+    catalogId,
+    (userId, catalogId) => Promise.resolve(configManager.removeCatalog(userId, catalogId)),
+    userId => clearBuilderCache(userId)
+  );
 
-    if (success) {
-      clearBuilderCache(userId); // Clear cache after removing a catalog
-      return res.redirect(`/configure/${userId}?message=Catalog removed successfully`);
-    } else {
-      return res.redirect(`/configure/${userId}?error=Failed to remove catalog`);
-    }
-  } catch (error) {
-    console.error('Error removing catalog:', error);
-    return res.redirect(`/configure/${userId}?error=Failed to remove catalog`);
+  if (result.success) {
+    return res.redirect(`/configure/${userId}?message=${result.message}`);
+  } else {
+    return res.redirect(`/configure/${userId}?error=${result.error}`);
   }
 });
 
@@ -108,18 +113,17 @@ router.post('/:userId/moveUp', async (req, res) => {
     return res.redirect(`/configure/${userId}?error=Catalog ID is required`);
   }
 
-  try {
-    const success = configManager.moveCatalogUp(userId, catalogId);
+  const result = await handleMoveCatalogUp(
+    userId,
+    catalogId,
+    (userId, catalogId) => Promise.resolve(configManager.moveCatalogUp(userId, catalogId)),
+    userId => clearBuilderCache(userId)
+  );
 
-    if (success) {
-      clearBuilderCache(userId); // Clear cache after changing catalog order
-      return res.redirect(`/configure/${userId}?message=Catalog moved up successfully`);
-    } else {
-      return res.redirect(`/configure/${userId}?error=Failed to move catalog up`);
-    }
-  } catch (error) {
-    console.error('Error moving catalog up:', error);
-    return res.redirect(`/configure/${userId}?error=Failed to move catalog up`);
+  if (result.success) {
+    return res.redirect(`/configure/${userId}?message=${result.message}`);
+  } else {
+    return res.redirect(`/configure/${userId}?error=${result.error}`);
   }
 });
 
@@ -132,18 +136,17 @@ router.post('/:userId/moveDown', async (req, res) => {
     return res.redirect(`/configure/${userId}?error=Catalog ID is required`);
   }
 
-  try {
-    const success = configManager.moveCatalogDown(userId, catalogId);
+  const result = await handleMoveCatalogDown(
+    userId,
+    catalogId,
+    (userId, catalogId) => Promise.resolve(configManager.moveCatalogDown(userId, catalogId)),
+    userId => clearBuilderCache(userId)
+  );
 
-    if (success) {
-      clearBuilderCache(userId); // Clear cache after changing catalog order
-      return res.redirect(`/configure/${userId}?message=Catalog moved down successfully`);
-    } else {
-      return res.redirect(`/configure/${userId}?error=Failed to move catalog down`);
-    }
-  } catch (error) {
-    console.error('Error moving catalog down:', error);
-    return res.redirect(`/configure/${userId}?error=Failed to move catalog down`);
+  if (result.success) {
+    return res.redirect(`/configure/${userId}?message=${result.message}`);
+  } else {
+    return res.redirect(`/configure/${userId}?error=${result.error}`);
   }
 });
 
