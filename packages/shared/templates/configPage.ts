@@ -65,7 +65,7 @@ export function getConfigPageHTML(
         </div>
       </div>
       <p class="text-sm text-muted-foreground break-words overflow-hidden">${catalog.description}</p>
-      <p class="text-xs font-mono text-muted-foreground overflow-hidden text-ellipsis">${catalog.endpoint}manifest.json</p>
+      <p class="text-xs font-mono text-muted-foreground overflow-hidden text-ellipsis">${catalog.endpoint}</p>
     </div>
   `;
     })
