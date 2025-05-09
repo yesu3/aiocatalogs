@@ -1,12 +1,11 @@
 /**
- * Gemeinsame Templates für die Konfigurationsseite
+ * Shared templates for the configuration page
  *
- * Diese Datei enthält HTML-Templates, die sowohl von der Node.js- als auch von der
- * Cloudflare-Implementierung verwendet werden können.
+ * This file contains HTML templates that can be used by both the Node.js and Cloudflare implementations.
  */
 
 /**
- * Erstellt das HTML für die Konfigurationsseite
+ * Creates the HTML for the configuration page
  */
 export function getConfigPageHTML(
   userId: string,
@@ -40,8 +39,8 @@ export function getConfigPageHTML(
     )
     .join('');
 
-  // Erstelle URLs für die Stremio-Integration mit Query-Parametern
-  // Bei baseUrl muss das Protokoll bereits enthalten sein
+  // Create URLs for the Stremio integration with query parameters
+  // The baseUrl must already contain the protocol
   const stremioUrl = `stremio://${baseUrl.replace(/^https?:\/\//, '')}/manifest.json?userId=${userId}`;
   const manifestUrl = `${baseUrl}/manifest.json?userId=${userId}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
@@ -146,7 +145,7 @@ export function getConfigPageHTML(
               : ''
           }
 
-          <!-- Spenden-Button prominent platziert -->
+          <!-- Sponsor-Button prominently placed -->
           <div class="mb-8 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500 flex flex-col sm:flex-row items-center justify-between">
             <div>
               <h3 class="font-semibold mb-1">Support AIOCatalogs</h3>
@@ -271,7 +270,7 @@ export function getConfigPageHTML(
           </div>
         </div>
 
-        <!-- Footer mit Social Links -->
+        <!-- Footer with Social Links -->
         <footer class="py-6 border-t border-border mt-10">
           <div class="container flex flex-col items-center gap-4">
             <div class="flex space-x-4">
@@ -290,7 +289,7 @@ export function getConfigPageHTML(
                 </svg>
               </a>
               
-              <!-- Spenden-Link -->
+              <!-- Sponsor-Link -->
               <a href="https://buymeacoffee.com/pantel" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-primary transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
@@ -320,7 +319,7 @@ export function getConfigPageHTML(
 }
 
 /**
- * Erstellt das HTML für die Startseite
+ * Creates the HTML for the home page
  */
 export function getHomePageHTML() {
   return `
@@ -452,7 +451,7 @@ export function getHomePageHTML() {
 }
 
 /**
- * Helfer-Funktion zum Konvertieren von stremio://-URLs zu https://
+ * Helper function to convert stremio:// URLs to https://
  */
 export function convertStremioUrl(url: string): string {
   if (url.startsWith('stremio://')) {

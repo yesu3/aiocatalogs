@@ -6,32 +6,32 @@ import { getAddonInterface, clearAddonCache } from './addon';
 import { D1Database, Env } from './types';
 import { getHomePageHTML } from '../shared/templates/configPage';
 
-// Erstelle Hono App mit Bindings Typparameter
+// Create Hono App with Bindings type parameter
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS-Middleware aktivieren
+// Enable CORS middleware
 app.use('*', cors());
 
-// Konfigmanager initialisieren
+// Initialize config manager
 const initConfigManager = (c: any) => {
   if (c.env && c.env.DB) {
     configManager.setDatabase(c.env.DB);
   }
 };
 
-// Routen
+// Routes
 app.get('/', async c => {
-  // Umleitung von / auf /configure
+  // Redirect from / to /configure
   return c.redirect('/configure');
 });
 
-// Startseite mit Benutzerauswahl
+// Home page with user selection
 app.get('/configure', async c => {
   initConfigManager(c);
   return c.html(getHomePageHTML());
 });
 
-// Benutzer erstellen
+// Create user
 app.post('/configure/create', async c => {
   initConfigManager(c);
   const userId = await configManager.generateUserId();
@@ -40,7 +40,7 @@ app.post('/configure/create', async c => {
   return c.redirect(`/configure/${userId}`);
 });
 
-// Benutzer laden
+// Load user
 app.post('/configure/load', async c => {
   initConfigManager(c);
   const formData = await c.req.formData();
@@ -58,7 +58,7 @@ app.post('/configure/load', async c => {
   return c.redirect(`/configure/${userId}`);
 });
 
-// Konfigurations-Seite (importiert aus separater Datei)
+// Configuration page (imported from separate file)
 import { getConfigPage, addCatalog, removeCatalog } from './routes/configPage';
 
 app.get('/configure/:userId', async c => {
@@ -76,7 +76,7 @@ app.post('/configure/:userId/remove', async c => {
   return removeCatalog(c);
 });
 
-// Manifest.json mit userId als Query-Parameter
+// Manifest.json with userId as query parameter
 app.get('/manifest.json', async c => {
   initConfigManager(c);
   const userId = c.req.query('userId') || 'default';
@@ -84,7 +84,7 @@ app.get('/manifest.json', async c => {
   if (c.env && c.env.DB) {
     const addonInterface = await getAddonInterface(userId, c.env.DB as D1Database);
 
-    // Cache für zukünftige Anfragen löschen
+    // Clear cache for future requests
     clearAddonCache(userId);
 
     c.header('Content-Type', 'application/json');
@@ -94,13 +94,13 @@ app.get('/manifest.json', async c => {
   }
 });
 
-// Addon-API-Routen
+// Addon API routes
 app.get('/:resource/:type/:id\\.json', async c => {
   initConfigManager(c);
   const params = c.req.param();
   const resource = params.resource;
   const type = params.type;
-  // Route-Parameter korrekt extrahieren
+  // Extract route parameters correctly
   const idWithJson = params['id\\.json'];
   const id = idWithJson ? idWithJson.replace(/\.json$/, '') : '';
   const userId = c.req.query('userId') || 'default';
@@ -125,16 +125,16 @@ app.get('/:resource/:type/:id\\.json', async c => {
   }
 });
 
-// 404-Handler
+// 404 handler
 app.notFound(c => {
   return c.text('Not found', 404);
 });
 
-// Error-Handler
+// Error handler
 app.onError((err, c) => {
   console.error('Error:', err);
   return c.text('Internal Server Error', 500);
 });
 
-// Worker-Export
+// Worker export
 export default app;

@@ -6,28 +6,28 @@ import {
   convertStremioUrl,
 } from '../../shared/templates/configPage';
 
-// Direkte Referenz zur package.json für die Version
-// Dies funktioniert, weil beim Build-Prozess alle Assets gebundelt werden
+// Direct reference to package.json for version
+// This works because all assets are bundled during the build process
 import packageJson from '../../../package.json';
 const PACKAGE_VERSION = packageJson.version || 'unknown';
 
-// Konfigurationsseite anzeigen
+// Display configuration page
 export const getConfigPage = async (c: any) => {
   const userId = c.req.param('userId');
 
-  // Falls keine User-ID angegeben wurde, zur Startseite umleiten
+  // If no user ID is provided, redirect to home page
   if (!userId) {
     return c.redirect('/configure');
   }
 
-  // Prüfen, ob der Benutzer existiert
+  // Check if user exists
   const exists = await configManager.userExists(userId);
   if (!exists) {
     return c.redirect('/configure');
   }
 
   try {
-    // Konfiguration laden
+    // Load configuration
     const catalogs = await configManager.getAllCatalogs(userId);
     const url = new URL(c.req.url);
     const baseUrlHost = url.host;
@@ -35,7 +35,7 @@ export const getConfigPage = async (c: any) => {
     const message = c.req.query('message') || '';
     const error = c.req.query('error') || '';
 
-    // HTML als Text zurückgeben
+    // Return HTML as text
     return c.html(
       sharedGetConfigPageHTML(userId, catalogs, baseUrl, message, error, true, PACKAGE_VERSION)
     );
@@ -45,19 +45,19 @@ export const getConfigPage = async (c: any) => {
   }
 };
 
-// Katalog hinzufügen
+// Add catalog
 export const addCatalog = async (c: any) => {
   const userId = c.req.param('userId');
   const formData = await c.req.formData();
   const rawCatalogUrl = formData.get('catalogUrl') as string;
 
-  // Prüfen, ob der Benutzer existiert
+  // Check if user exists
   const exists = await configManager.userExists(userId);
   if (!exists) {
     return c.text('User not found', 404);
   }
 
-  // stremio://-URL in https:// konvertieren, falls nötig
+  // Convert stremio:// URL to https:// if necessary
   const catalogUrl = convertStremioUrl(rawCatalogUrl);
 
   try {
@@ -66,7 +66,7 @@ export const addCatalog = async (c: any) => {
 
     if (manifest) {
       await configManager.addCatalog(userId, manifest);
-      // Cache löschen
+      // Clear cache
       return c.redirect(`/configure/${userId}?message=Catalog added successfully`);
     } else {
       return c.redirect(`/configure/${userId}?error=Failed to fetch catalog manifest`);
@@ -77,13 +77,13 @@ export const addCatalog = async (c: any) => {
   }
 };
 
-// Katalog entfernen
+// Remove catalog
 export const removeCatalog = async (c: any) => {
   const userId = c.req.param('userId');
   const formData = await c.req.formData();
   const catalogId = formData.get('catalogId') as string;
 
-  // Prüfen, ob der Benutzer existiert
+  // Check if user exists
   const exists = await configManager.userExists(userId);
   if (!exists) {
     return c.text('User not found', 404);
@@ -92,7 +92,7 @@ export const removeCatalog = async (c: any) => {
   const success = await configManager.removeCatalog(userId, catalogId);
 
   if (success) {
-    // Cache löschen
+    // Clear cache
     return c.redirect(`/configure/${userId}?message=Catalog removed successfully`);
   } else {
     return c.redirect(`/configure/${userId}?error=Failed to remove catalog`);

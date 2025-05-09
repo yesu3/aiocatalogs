@@ -5,40 +5,40 @@ import { getConfigPageHTML, convertStremioUrl } from '../../shared/templates/con
 import { clearBuilderCache } from '../server';
 import packageJson from '../../../package.json';
 
-// Router für die Konfigurationsseite
+// Router for the configuration page
 const router = express.Router();
 
-// Paketversion aus der package.json lesen
+// Read package version from package.json
 const getPackageVersion = (): string => {
   return packageJson.version || 'unknown';
 };
 
-// Konfigurationsseite anzeigen
+// Display configuration page
 router.get('/:userId', async (req, res) => {
   const userId = req.params.userId;
 
-  // Prüfen, ob der Benutzer existiert
+  // Check if user exists
   if (!configManager.userExists(userId)) {
     return res.redirect('/configure');
   }
 
   try {
-    // Konfiguration laden
+    // Load configuration
     const catalogs = configManager.getAllCatalogs(userId);
 
-    // Host-URL für Stremio-Links
-    // Protokoll und Host korrekt setzen für lokale Entwicklung
+    // Host URL for Stremio links
+    // Set protocol and host correctly for local development
     const host = req.headers.host || 'localhost:7000';
     const baseUrl = `${req.protocol === 'https' ? 'https' : 'http'}://${host}`;
 
-    // Optionale Nachrichten
+    // Optional messages
     const message = (req.query.message as string) || '';
     const error = (req.query.error as string) || '';
 
-    // Version aus package.json lesen
+    // Read version from package.json
     const packageVersion = getPackageVersion();
 
-    // HTML rendern
+    // Render HTML
     res.send(getConfigPageHTML(userId, catalogs, baseUrl, message, error, false, packageVersion));
   } catch (error) {
     console.error('Error displaying config page:', error);
@@ -46,7 +46,7 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
-// Katalog hinzufügen
+// Add catalog
 router.post('/:userId/add', async (req, res) => {
   const userId = req.params.userId;
   const catalogUrl = req.body.catalogUrl;
@@ -56,7 +56,7 @@ router.post('/:userId/add', async (req, res) => {
   }
 
   try {
-    // stremio://-URL in https:// konvertieren, falls nötig
+    // Convert stremio:// URL to https:// if necessary
     const normalizedUrl = convertStremioUrl(catalogUrl);
 
     console.log(`Fetching catalog manifest from ${normalizedUrl}`);
@@ -64,7 +64,7 @@ router.post('/:userId/add', async (req, res) => {
 
     if (manifest) {
       configManager.addCatalog(userId, manifest);
-      clearBuilderCache(userId); // Cache nach Hinzufügen eines Katalogs löschen
+      clearBuilderCache(userId); // Clear cache after adding a catalog
       return res.redirect(`/configure/${userId}?message=Catalog added successfully`);
     } else {
       return res.redirect(`/configure/${userId}?error=Failed to fetch catalog manifest`);
@@ -75,7 +75,7 @@ router.post('/:userId/add', async (req, res) => {
   }
 });
 
-// Katalog entfernen
+// Remove catalog
 router.post('/:userId/remove', async (req, res) => {
   const userId = req.params.userId;
   const catalogId = req.body.catalogId;
@@ -88,7 +88,7 @@ router.post('/:userId/remove', async (req, res) => {
     const success = configManager.removeCatalog(userId, catalogId);
 
     if (success) {
-      clearBuilderCache(userId); // Cache nach Entfernen eines Katalogs löschen
+      clearBuilderCache(userId); // Clear cache after removing a catalog
       return res.redirect(`/configure/${userId}?message=Catalog removed successfully`);
     } else {
       return res.redirect(`/configure/${userId}?error=Failed to remove catalog`);

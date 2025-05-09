@@ -2,15 +2,15 @@ import { CatalogRequest, CatalogResponse, D1Database, MetaItem } from './types';
 import { configManager } from './configManager';
 import { version, description } from '../../package.json';
 
-// Cache für Builder um Mehrfacherstellung zu vermeiden
+// Cache for builders to avoid multiple creations
 const addonCache = new Map();
 
 const ADDON_ID = 'community.aiocatalogs';
 
-// Standardmanifest für einen Benutzer erstellen
+// Create standard manifest for a user
 function buildManifest(userId: string) {
   try {
-    // Manifest-Objekt initialisieren
+    // Initialize manifest object
     const manifest = {
       id: `${ADDON_ID}.${userId}`,
       version,
@@ -31,7 +31,7 @@ function buildManifest(userId: string) {
   } catch (error) {
     console.error('Error building manifest:', error);
 
-    // Fallback-Manifest zurückgeben
+    // Return fallback manifest
     return {
       id: `${ADDON_ID}.${userId}`,
       version,
@@ -56,32 +56,32 @@ function buildManifest(userId: string) {
   }
 }
 
-// Ein AddonInterface für einen bestimmten Benutzer erstellen
+// Create AddonInterface for a specific user
 export async function getAddonInterface(userId: string, db: D1Database) {
-  // Cache prüfen
+  // Check cache
   if (addonCache.has(userId)) {
     return addonCache.get(userId);
   }
 
-  // Sicherstellen, dass die Datenbank im configManager gesetzt ist
+  // Ensure database is set in configManager
   configManager.setDatabase(db);
 
-  // Alle Kataloge für den Benutzer abrufen
+  // Get all catalogs for the user
   const userCatalogs = await configManager.getAllCatalogs(userId);
 
-  // Manifest erstellen
+  // Create manifest
   const manifest = buildManifest(userId);
 
-  // Sammle alle Kataloge, Typen und Ressourcen
+  // Collect all catalogs, types and resources
   const allTypes = new Set<string>();
   const allResources = new Set<string>();
 
-  // Nur 'catalog' hinzufügen, da wir nur diesen Handler definieren
+  // Only add 'catalog' since we only define this handler
   allResources.add('catalog');
 
-  // Kataloge zum Manifest hinzufügen
+  // Add catalogs to the manifest
   if (userCatalogs.length === 0) {
-    // Default-Katalog, wenn keine Kataloge konfiguriert wurden
+    // Default catalog if no catalogs were configured
     manifest.catalogs.push({
       id: 'aiocatalogs-default',
       type: 'movie',
@@ -89,9 +89,9 @@ export async function getAddonInterface(userId: string, db: D1Database) {
     });
     allTypes.add('movie');
   } else {
-    // Kataloge aus den Benutzerkonfigurationen hinzufügen
+    // Add catalogs from user configurations
     userCatalogs.forEach(source => {
-      // Kataloge aus dieser Quelle hinzufügen
+      // Add catalogs from this source
       source.catalogs.forEach(catalog => {
         manifest.catalogs.push({
           id: `${source.id}:${catalog.id}`,
@@ -99,12 +99,12 @@ export async function getAddonInterface(userId: string, db: D1Database) {
           name: `${source.name}: ${catalog.name}`,
         });
 
-        // Typen für das Manifest sammeln
+        // Collect types for the manifest
         allTypes.add(catalog.type);
       });
 
-      // Ressourcen aus der Quelle sammeln -
-      // aber nur solche beibehalten, die wir unterstützen
+      // Collect resources from the source -
+      // but only keep those we support
       if (source.resources) {
         source.resources.forEach(resource => {
           if (resource === 'catalog') {
@@ -115,20 +115,20 @@ export async function getAddonInterface(userId: string, db: D1Database) {
     });
   }
 
-  // Gesammelte Typen und Ressourcen in das Manifest einfügen
+  // Insert collected types and resources into the manifest
   manifest.types = Array.from(allTypes);
   manifest.resources = Array.from(allResources);
 
-  // AddonInterface erstellen
+  // Create AddonInterface
   const addonInterface = {
     manifest,
 
-    // Katalog-Handler
+    // Catalog handler
     async catalog(args: CatalogRequest): Promise<CatalogResponse> {
       console.log(`Catalog request for ${userId} - ${args.type}/${args.id}`);
 
       try {
-        // Default-Katalog behandeln
+        // Handle default catalog
         if (args.id === 'aiocatalogs-default') {
           return {
             metas: [
@@ -143,8 +143,8 @@ export async function getAddonInterface(userId: string, db: D1Database) {
           };
         }
 
-        // Das neue Format der Katalog-ID ist: sourceId:catalogId
-        // ID aufteilen, um Quelle und Katalog zu identifizieren
+        // The new catalog ID format is: sourceId:catalogId
+        // Split ID to identify source and catalog
         const idParts = args.id.split(':');
         if (idParts.length !== 2) {
           console.error(`Invalid catalog ID format: ${args.id}`);
@@ -154,7 +154,7 @@ export async function getAddonInterface(userId: string, db: D1Database) {
         const sourceId = idParts[0];
         const catalogId = idParts[1];
 
-        // Katalogquelle aus der Benutzerkonfiguration holen
+        // Get catalog source from user configuration
         const userCatalogs = await configManager.getAllCatalogs(userId);
         const source = userCatalogs.find(c => c.id === sourceId);
 
@@ -163,7 +163,7 @@ export async function getAddonInterface(userId: string, db: D1Database) {
           return { metas: [] };
         }
 
-        // Katalog in der Quelle finden
+        // Find catalog in the source
         const catalog = source.catalogs.find(c => c.type === args.type && c.id === catalogId);
 
         if (!catalog) {
@@ -171,7 +171,7 @@ export async function getAddonInterface(userId: string, db: D1Database) {
           return { metas: [] };
         }
 
-        // Katalog-Endpunkt erstellen
+        // Create catalog endpoint
         const endpoint = source.endpoint.endsWith('/')
           ? source.endpoint.slice(0, -1)
           : source.endpoint;
@@ -188,7 +188,7 @@ export async function getAddonInterface(userId: string, db: D1Database) {
 
           const data = (await response.json()) as { metas?: any[] };
 
-          // Quelle zu jedem Element hinzufügen
+          // Add source to each item
           if (data && Array.isArray(data.metas)) {
             data.metas.forEach((item: any) => {
               item.sourceAddon = sourceId;
@@ -201,29 +201,28 @@ export async function getAddonInterface(userId: string, db: D1Database) {
           return { metas: [] };
         }
       } catch (error) {
-        console.error('Error in catalog handler:', error);
+        console.error(`Error handling catalog request: ${error}`);
         return { metas: [] };
       }
     },
 
-    // Meta-Handler (optional, falls benötigt)
+    // Meta handler - not implemented
     async meta() {
-      return { meta: {} };
+      return { meta: null };
     },
 
-    // Stream-Handler (optional, falls benötigt)
+    // Stream handler - not implemented
     async stream() {
       return { streams: [] };
     },
   };
 
-  // Interface im Cache speichern
+  // Cache and return the AddonInterface
   addonCache.set(userId, addonInterface);
-
   return addonInterface;
 }
 
-// Cache für einen Benutzer löschen
+// Clear cache for a specific user
 export function clearAddonCache(userId: string) {
   if (addonCache.has(userId)) {
     console.log(`Clearing addon cache for user ${userId}`);
@@ -231,7 +230,7 @@ export function clearAddonCache(userId: string) {
   }
 }
 
-// Gesamten Cache löschen
+// Clear entire addon cache
 export function clearAllAddonCache() {
   console.log('Clearing entire addon cache');
   addonCache.clear();

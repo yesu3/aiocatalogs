@@ -9,18 +9,18 @@ class ConfigManager {
     this.cache = new Map();
   }
 
-  // Datenbank setzen
+  // Set database
   setDatabase(database: D1Database) {
     this.db = database;
   }
 
-  // Initialisiere Datenbank-Schema
+  // Initialize database schema
   async initDatabase() {
     if (!this.db) {
       throw new Error('Database not initialized');
     }
 
-    // Erstelle die Tabelle für Nutzerkonfigurationen, falls nicht vorhanden
+    // Create table for user configurations if it doesn't exist
     try {
       await this.db.exec(
         `CREATE TABLE IF NOT EXISTS user_configs (user_id TEXT PRIMARY KEY, config TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`
@@ -32,17 +32,17 @@ class ConfigManager {
     }
   }
 
-  // Generiere eine neue Benutzer-ID
+  // Generate a new user ID
   async generateUserId(): Promise<string> {
-    // In Cloudflare Workers verwenden wir crypto.randomUUID
+    // In Cloudflare Workers we use crypto.randomUUID
     const userId = randomUUID();
     console.log(`Generated new user ID: ${userId}`);
     return userId;
   }
 
-  // Lade die Konfiguration für einen bestimmten Benutzer
+  // Load configuration for a specific user
   async loadConfig(userId: string): Promise<UserConfig> {
-    // Prüfe zuerst den Cache
+    // First check the cache
     if (this.cache.has(userId)) {
       console.log(`Using cached config for user ${userId}`);
       return this.cache.get(userId)!;
@@ -53,10 +53,10 @@ class ConfigManager {
     }
 
     try {
-      // Initialisiere die Datenbank, falls nicht bereits geschehen
+      // Initialize the database if not already done
       await this.initDatabase();
 
-      // Lade die Konfiguration aus der Datenbank
+      // Load configuration from the database
       const result = await this.db
         .prepare('SELECT config FROM user_configs WHERE user_id = ?')
         .bind(userId)
@@ -68,7 +68,7 @@ class ConfigManager {
           `Loaded config for user ${userId} with ${config.catalogs?.length || 0} catalogs`
         );
 
-        // Speichere im Cache
+        // Save in cache
         this.cache.set(userId, config);
         return config;
       }
@@ -76,23 +76,23 @@ class ConfigManager {
       console.error(`Error loading config for user ${userId}:`, error);
     }
 
-    // Standard-leere Konfiguration
+    // Default empty configuration
     console.log(`Creating new empty config for user ${userId}`);
     const defaultConfig: UserConfig = { catalogs: [] };
     return defaultConfig;
   }
 
-  // Speichere die Konfiguration für einen bestimmten Benutzer
+  // Save configuration for a specific user
   async saveConfig(userId: string, config?: UserConfig): Promise<boolean> {
     if (!this.db) {
       throw new Error('Database not initialized');
     }
 
-    // Wenn keine Konfiguration angegeben wurde, aber im Cache ist, verwende diese
+    // If no configuration is provided but exists in cache, use that
     if (!config && this.cache.has(userId)) {
       config = this.cache.get(userId)!;
     } else if (!config) {
-      // Fehler, wenn keine Konfiguration gefunden wurde
+      // Error if no configuration found
       console.error(
         `Cannot save config for user ${userId}: config not provided and not found in cache`
       );
@@ -100,23 +100,23 @@ class ConfigManager {
     }
 
     try {
-      // Initialisiere die Datenbank, falls nicht bereits geschehen
+      // Initialize the database if not already done
       await this.initDatabase();
 
       const now = Date.now();
       const configJson = JSON.stringify(config);
 
-      // Prüfe, ob der Benutzer bereits existiert
+      // Check if the user already exists
       const exists = await this.userExists(userId);
 
       if (exists) {
-        // Update bestehenden Eintrag
+        // Update existing entry
         await this.db
           .prepare('UPDATE user_configs SET config = ?, updated_at = ? WHERE user_id = ?')
           .bind(configJson, now, userId)
           .run();
       } else {
-        // Füge neuen Eintrag hinzu
+        // Add new entry
         await this.db
           .prepare(
             'INSERT INTO user_configs (user_id, config, created_at, updated_at) VALUES (?, ?, ?, ?)'
@@ -127,7 +127,7 @@ class ConfigManager {
 
       console.log(`Saved config for user ${userId} with ${config.catalogs.length} catalogs`);
 
-      // Aktualisiere den Cache
+      // Update the cache
       this.cache.set(userId, config);
       return true;
     } catch (error) {
@@ -136,17 +136,17 @@ class ConfigManager {
     }
   }
 
-  // Hole die Konfiguration für einen bestimmten Benutzer
+  // Get configuration for a specific user
   async getConfig(userId: string): Promise<UserConfig> {
     return this.loadConfig(userId);
   }
 
-  // Füge einen Katalog für einen bestimmten Benutzer hinzu
+  // Add a catalog for a specific user
   async addCatalog(userId: string, manifest: CatalogManifest): Promise<boolean> {
     console.log(`Adding catalog ${manifest.id} to user ${userId}`);
     const config = await this.loadConfig(userId);
 
-    // Prüfe, ob ein Katalog mit der gleichen ID bereits existiert
+    // Check if a catalog with the same ID already exists
     const existingIndex = config.catalogs.findIndex(c => c.id === manifest.id);
 
     if (existingIndex >= 0) {
@@ -167,7 +167,7 @@ class ConfigManager {
     return success;
   }
 
-  // Entferne einen Katalog für einen bestimmten Benutzer
+  // Remove a catalog for a specific user
   async removeCatalog(userId: string, id: string): Promise<boolean> {
     console.log(`Removing catalog ${id} from user ${userId}`);
     const config = await this.loadConfig(userId);
@@ -183,27 +183,27 @@ class ConfigManager {
     return false;
   }
 
-  // Hole einen bestimmten Katalog für einen Benutzer
+  // Get a specific catalog for a user
   async getCatalog(userId: string, id: string): Promise<CatalogManifest | undefined> {
     const config = await this.loadConfig(userId);
     return config.catalogs.find(c => c.id === id);
   }
 
-  // Hole alle Kataloge für einen Benutzer
+  // Get all catalogs for a user
   async getAllCatalogs(userId: string): Promise<CatalogManifest[]> {
     const config = await this.loadConfig(userId);
     console.log(`Getting all catalogs for user ${userId}: found ${config.catalogs.length}`);
     return config.catalogs;
   }
 
-  // Prüfe, ob ein Benutzer existiert
+  // Check if a user exists
   async userExists(userId: string): Promise<boolean> {
     if (!this.db) {
       throw new Error('Database not initialized');
     }
 
     try {
-      // Initialisiere die Datenbank, falls nicht bereits geschehen
+      // Initialize the database if not already done
       await this.initDatabase();
 
       const result = await this.db
@@ -220,14 +220,14 @@ class ConfigManager {
     }
   }
 
-  // Liste alle Benutzer auf
+  // List all users
   async getAllUsers(): Promise<string[]> {
     if (!this.db) {
       throw new Error('Database not initialized');
     }
 
     try {
-      // Initialisiere die Datenbank, falls nicht bereits geschehen
+      // Initialize the database if not already done
       await this.initDatabase();
 
       const results = await this.db
@@ -247,7 +247,7 @@ class ConfigManager {
     }
   }
 
-  // Cache für einen Benutzer löschen
+  // Clear cache for a user
   clearCache(userId: string) {
     if (this.cache.has(userId)) {
       console.log(`Clearing cache for user ${userId}`);
@@ -255,12 +255,12 @@ class ConfigManager {
     }
   }
 
-  // Gesamten Cache löschen
+  // Clear all cache
   clearAllCache() {
     console.log('Clearing entire cache');
     this.cache.clear();
   }
 }
 
-// Singleton-Instanz
+// Create and export a singleton instance
 export const configManager = new ConfigManager();

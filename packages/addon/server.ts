@@ -5,27 +5,27 @@ import configManager from './lib/configManager';
 import { getHomePageHTML } from '../shared/templates/configPage';
 import configRoutes from './routes/configPage';
 
-// Port für den Server (Default: 7000, kann über ENV-Variable überschrieben werden)
+// Port for the server (Default: 7000, can be overridden via ENV variable)
 const port = process.env.PORT || 7000;
 
-// Express-App erstellen
+// Create Express app
 const app = express();
 
-// CORS-Header für Stremio-Anfragen hinzufügen
+// Add CORS headers for Stremio requests
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   next();
 });
 
-// Middleware für JSON und URL-encodierte Formulardaten
+// Middleware for JSON and URL-encoded form data
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Cache für Builder um Mehrfacherstellung zu vermeiden
+// Cache for builders to avoid multiple creations
 const builderCache = new Map();
 
-// Cache für einen Benutzer löschen
+// Clear cache for a user
 export function clearBuilderCache(userId: string) {
   if (builderCache.has(userId)) {
     console.log(`Clearing builder cache for user ${userId}`);
@@ -33,32 +33,32 @@ export function clearBuilderCache(userId: string) {
   }
 }
 
-// Gesamten Cache löschen
+// Clear entire cache
 export function clearAllBuilderCache() {
   console.log('Clearing entire builder cache');
   builderCache.clear();
 }
 
-// Startseite
+// Home page
 app.get('/', (req, res) => {
-  // Umleitung von / auf /configure
+  // Redirect from / to /configure
   return res.redirect('/configure');
 });
 
-// Hauptseite mit Benutzerauswahl
+// Main page with user selection
 app.get('/configure', (req, res) => {
-  // Wenn userId als Query-Parameter vorhanden, zur Konfigurationsseite umleiten
+  // If userId is present as a query parameter, redirect to the configuration page
   const userId = req.query.userId as string;
   if (userId) {
     return res.redirect(`/configure/${userId}`);
   }
 
-  // Andernfalls Startseite anzeigen
+  // Otherwise display the home page
   res.setHeader('Content-Type', 'text/html');
   res.send(getHomePageHTML());
 });
 
-// Neuen Benutzer erstellen
+// Create new user
 app.post('/configure/create', (req, res) => {
   const userId = configManager.generateUserId();
   configManager.loadConfig(userId);
@@ -66,7 +66,7 @@ app.post('/configure/create', (req, res) => {
   res.redirect(`/configure/${userId}`);
 });
 
-// Benutzer laden
+// Load user
 // @ts-ignore - Temporary fix for Express version conflict
 app.post('/configure/load', (req, res) => {
   const userId = req.body.userId;
@@ -82,15 +82,15 @@ app.post('/configure/load', (req, res) => {
   res.redirect(`/configure/${userId}`);
 });
 
-// Konfigurationsrouten einbinden
+// Include configuration routes
 app.use('/configure', configRoutes);
 
-// Handler für /manifest.json
+// Handler for /manifest.json
 app.get('/manifest.json', (req, res) => {
   const userId = (req.query.userId as string) || 'default';
 
   try {
-    // Builder aus Cache holen oder neu erstellen
+    // Get builder from cache or create a new one
     let builder;
 
     if (builderCache.has(userId)) {
@@ -100,16 +100,16 @@ app.get('/manifest.json', (req, res) => {
       builderCache.set(userId, builder);
     }
 
-    // Stremio SDK verwendet getInterface() um das Interface und Manifest zu bekommen
+    // Stremio SDK uses getInterface() to get the interface and manifest
     const addonInterface = builder.getInterface();
 
-    // Logging für Debug-Zwecke
+    // Logging for debugging purposes
     console.log(
       'Sending manifest (first 200 chars):',
       JSON.stringify(addonInterface.manifest).substring(0, 200) + '...'
     );
 
-    // Explizit Header setzen und Manifest senden
+    // Explicitly set headers and send manifest
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.status(200).send(JSON.stringify(addonInterface.manifest));
   } catch (error) {
@@ -118,19 +118,19 @@ app.get('/manifest.json', (req, res) => {
   }
 });
 
-// Handler für Stremio-Endpunkte
+// Handler for Stremio endpoints
 app.get('/:resource/:type/:id.json', (req, res) => {
   const { resource, type, id } = req.params;
   const userId = (req.query.userId as string) || 'default';
 
   try {
-    // Nur catalog-Anfragen bearbeiten, andere mit Fehler beantworten
+    // Only process catalog requests, respond with error for others
     if (resource !== 'catalog') {
       res.status(404).json({ error: 'Resource not supported' });
       return;
     }
 
-    // Builder aus Cache holen oder neu erstellen
+    // Get builder from cache or create a new one
     let builder;
 
     if (builderCache.has(userId)) {
@@ -140,11 +140,11 @@ app.get('/:resource/:type/:id.json', (req, res) => {
       builderCache.set(userId, builder);
     }
 
-    // Addon Interface holen
+    // Get addon interface
     const addonInterface = builder.getInterface();
 
-    // Catalog-Methode aus Interface aufrufen - KORRIGIERT
-    // Die Stremio SDK stellt eine get() Methode zur Verfügung
+    // Call catalog method from interface - CORRECTED
+    // The Stremio SDK provides a get() method
     addonInterface
       .get(resource, type, id)
       .then((result: unknown) => {
@@ -161,7 +161,7 @@ app.get('/:resource/:type/:id.json', (req, res) => {
   }
 });
 
-// Server starten
+// Start server
 const portNumber = typeof port === 'string' ? parseInt(port, 10) : port;
 app.listen(portNumber, '0.0.0.0', () => {
   console.log(`Server running at http://localhost:${portNumber}`);
