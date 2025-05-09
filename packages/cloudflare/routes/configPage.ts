@@ -27,7 +27,7 @@ export const getConfigPage = async (c: any) => {
   // Check if user exists
   const exists = await configManager.userExists(userId);
   if (!exists) {
-    return c.redirect('/configure');
+    return c.redirect('/configure?error=User with ID ' + userId + ' not found');
   }
 
   try {
@@ -59,7 +59,7 @@ export const addCatalog = async (c: any) => {
   // Check if user exists
   const exists = await configManager.userExists(userId);
   if (!exists) {
-    return c.text('User not found', 404);
+    return c.redirect('/configure?error=User not found');
   }
 
   // Convert stremio:// URL to https:// if necessary
@@ -89,7 +89,7 @@ export const removeCatalog = async (c: any) => {
   // Check if user exists
   const exists = await configManager.userExists(userId);
   if (!exists) {
-    return c.text('User not found', 404);
+    return c.redirect('/configure?error=User not found');
   }
 
   const result = await handleRemoveCatalog(
@@ -115,7 +115,7 @@ export const moveCatalogUp = async (c: any) => {
   // Check if user exists
   const exists = await configManager.userExists(userId);
   if (!exists) {
-    return c.text('User not found', 404);
+    return c.redirect('/configure?error=User not found');
   }
 
   const result = await handleMoveCatalogUp(
@@ -141,7 +141,7 @@ export const moveCatalogDown = async (c: any) => {
   // Check if user exists
   const exists = await configManager.userExists(userId);
   if (!exists) {
-    return c.text('User not found', 404);
+    return c.redirect('/configure?error=User not found');
   }
 
   const result = await handleMoveCatalogDown(

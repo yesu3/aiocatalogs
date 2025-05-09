@@ -26,7 +26,7 @@ router.get('/:userId', async (req, res) => {
 
   // Check if user exists
   if (!configManager.userExists(userId)) {
-    return res.redirect('/configure');
+    return res.redirect('/configure?error=User with ID ' + userId + ' not found');
   }
 
   try {

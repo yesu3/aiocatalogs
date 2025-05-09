@@ -76,11 +76,11 @@ app.post('/configure/load', (req, res) => {
   const userId = req.body.userId;
 
   if (!userId) {
-    return res.status(400).send('User ID is required');
+    return res.redirect('/configure?error=User ID is required');
   }
 
   if (!configManager.userExists(userId)) {
-    return res.status(404).send('User not found');
+    return res.redirect('/configure?error=User not found');
   }
 
   res.redirect(`/configure/${userId}`);
