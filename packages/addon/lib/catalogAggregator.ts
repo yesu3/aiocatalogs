@@ -1,20 +1,22 @@
 import fetch from 'node-fetch';
 import configManager from './configManager';
-import { CatalogManifest, MetaPreviewItem } from '../types';
+import { CatalogManifest, MetaPreviewItem } from '../../types';
+import { BaseCatalogAggregator } from '../../shared/catalogAggregator';
 
-class CatalogAggregator {
+class NodeCatalogAggregator extends BaseCatalogAggregator {
   async fetchCatalogData(
     userId: string,
     catalogType: string,
     catalogId: string
   ): Promise<MetaPreviewItem[]> {
-    const allCatalogs = configManager.getAllCatalogs(userId);
+    const allCatalogs = await configManager.getAllCatalogs(userId);
     const results: MetaPreviewItem[] = [];
 
     // Process each catalog that matches the requested type and ID
     for (const catalog of allCatalogs) {
       const matchingCatalog = catalog.catalogs.find(
-        cat => cat.type === catalogType && (catalogId === 'all' || cat.id === catalogId)
+        (cat: { type: string; id: string }) =>
+          cat.type === catalogType && (catalogId === 'all' || cat.id === catalogId)
       );
 
       if (matchingCatalog) {
@@ -53,15 +55,15 @@ class CatalogAggregator {
   }
 
   // Get all catalog types and IDs from the user's added catalogs
-  getAllCatalogTypes(userId: string): { type: string; id: string; name: string }[] {
-    const catalogs = configManager.getAllCatalogs(userId);
+  async getAllCatalogTypes(userId: string): Promise<{ type: string; id: string; name: string }[]> {
+    const catalogs = await configManager.getAllCatalogs(userId);
     const allCatalogTypes: { type: string; id: string; name: string }[] = [];
 
     // Create a map to deduplicate catalog entries
     const catalogMap = new Map<string, { type: string; id: string; name: string }>();
 
-    catalogs.forEach(catalog => {
-      catalog.catalogs.forEach(cat => {
+    catalogs.forEach((catalog: CatalogManifest) => {
+      catalog.catalogs.forEach((cat: { type: string; id: string; name: string }) => {
         const key = `${cat.type}-${cat.id}`;
         if (!catalogMap.has(key)) {
           catalogMap.set(key, {
@@ -77,12 +79,12 @@ class CatalogAggregator {
   }
 
   // Get all resource types from the user's added catalogs
-  getAllResourceTypes(userId: string): string[] {
-    const catalogs = configManager.getAllCatalogs(userId);
+  async getAllResourceTypes(userId: string): Promise<string[]> {
+    const catalogs = await configManager.getAllCatalogs(userId);
     const resourceSet = new Set<string>();
 
-    catalogs.forEach(catalog => {
-      catalog.resources.forEach(resource => {
+    catalogs.forEach((catalog: CatalogManifest) => {
+      catalog.resources.forEach((resource: string) => {
         resourceSet.add(resource);
       });
     });
@@ -147,5 +149,5 @@ class CatalogAggregator {
   }
 }
 
-const catalogAggregator = new CatalogAggregator();
+const catalogAggregator = new NodeCatalogAggregator();
 export default catalogAggregator;

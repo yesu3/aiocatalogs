@@ -67,6 +67,7 @@ import {
   moveCatalogDown,
 } from './routes/configPage';
 
+// Configuration endpoints
 app.get('/configure/:userId', async c => {
   initConfigManager(c);
   return getConfigPage(c);
@@ -98,13 +99,15 @@ app.get('/manifest.json', async c => {
   const userId = c.req.query('userId') || 'default';
 
   if (c.env && c.env.DB) {
-    const addonInterface = await getAddonInterface(userId, c.env.DB as D1Database);
+    try {
+      const addonInterface = await getAddonInterface(userId, c.env.DB as D1Database);
 
-    // Clear cache for future requests
-    clearAddonCache(userId);
-
-    c.header('Content-Type', 'application/json');
-    return c.json(addonInterface.manifest);
+      c.header('Content-Type', 'application/json');
+      return c.json(addonInterface.manifest);
+    } catch (error) {
+      console.error('Error generating manifest:', error);
+      return c.json({ error: 'Failed to generate manifest' }, 500);
+    }
   } else {
     return c.json({ error: 'Database not available' }, 500);
   }
@@ -122,19 +125,25 @@ app.get('/:resource/:type/:id\\.json', async c => {
   const userId = c.req.query('userId') || 'default';
 
   if (c.env && c.env.DB) {
-    const addonInterface = await getAddonInterface(userId, c.env.DB as D1Database);
+    try {
+      const addonInterface = await getAddonInterface(userId, c.env.DB as D1Database);
 
-    if (resource === 'catalog') {
-      const result = await addonInterface.catalog({ type, id });
+      // Handle different resource types
+      let result;
+      if (resource === 'catalog') {
+        result = await addonInterface.catalog({ type, id });
+      } else if (resource === 'meta') {
+        result = await addonInterface.meta();
+      } else if (resource === 'stream') {
+        result = await addonInterface.stream();
+      } else {
+        return c.json({ error: 'Resource not supported' }, 404);
+      }
+
       return c.json(result);
-    } else if (resource === 'meta') {
-      const result = await addonInterface.meta();
-      return c.json(result);
-    } else if (resource === 'stream') {
-      const result = await addonInterface.stream();
-      return c.json(result);
-    } else {
-      return c.json({ error: 'not found' }, 404);
+    } catch (error) {
+      console.error(`Error in ${resource} endpoint:`, error);
+      return c.json({ error: 'Internal server error' }, 500);
     }
   } else {
     return c.json({ error: 'Database not available' }, 500);
