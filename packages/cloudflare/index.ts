@@ -28,7 +28,12 @@ app.get('/', async c => {
 // Home page with user selection
 app.get('/configure', async c => {
   initConfigManager(c);
-  return c.html(getHomePageHTML());
+
+  // Get message and error parameters from query
+  const message = c.req.query('message') || '';
+  const error = c.req.query('error') || '';
+
+  return c.html(getHomePageHTML(message, error));
 });
 
 // Create user

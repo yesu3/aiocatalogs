@@ -53,9 +53,13 @@ app.get('/configure', (req, res) => {
     return res.redirect(`/configure/${userId}`);
   }
 
+  // Get message and error parameters
+  const message = (req.query.message as string) || '';
+  const error = (req.query.error as string) || '';
+
   // Otherwise display the home page
   res.setHeader('Content-Type', 'text/html');
-  res.send(getHomePageHTML());
+  res.send(getHomePageHTML(message, error));
 });
 
 // Create new user
