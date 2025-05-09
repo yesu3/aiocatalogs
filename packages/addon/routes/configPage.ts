@@ -99,4 +99,52 @@ router.post('/:userId/remove', async (req, res) => {
   }
 });
 
+// Move catalog up
+router.post('/:userId/moveUp', async (req, res) => {
+  const userId = req.params.userId;
+  const catalogId = req.body.catalogId;
+
+  if (!catalogId) {
+    return res.redirect(`/configure/${userId}?error=Catalog ID is required`);
+  }
+
+  try {
+    const success = configManager.moveCatalogUp(userId, catalogId);
+
+    if (success) {
+      clearBuilderCache(userId); // Clear cache after changing catalog order
+      return res.redirect(`/configure/${userId}?message=Catalog moved up successfully`);
+    } else {
+      return res.redirect(`/configure/${userId}?error=Failed to move catalog up`);
+    }
+  } catch (error) {
+    console.error('Error moving catalog up:', error);
+    return res.redirect(`/configure/${userId}?error=Failed to move catalog up`);
+  }
+});
+
+// Move catalog down
+router.post('/:userId/moveDown', async (req, res) => {
+  const userId = req.params.userId;
+  const catalogId = req.body.catalogId;
+
+  if (!catalogId) {
+    return res.redirect(`/configure/${userId}?error=Catalog ID is required`);
+  }
+
+  try {
+    const success = configManager.moveCatalogDown(userId, catalogId);
+
+    if (success) {
+      clearBuilderCache(userId); // Clear cache after changing catalog order
+      return res.redirect(`/configure/${userId}?message=Catalog moved down successfully`);
+    } else {
+      return res.redirect(`/configure/${userId}?error=Failed to move catalog down`);
+    }
+  } catch (error) {
+    console.error('Error moving catalog down:', error);
+    return res.redirect(`/configure/${userId}?error=Failed to move catalog down`);
+  }
+});
+
 export default router;

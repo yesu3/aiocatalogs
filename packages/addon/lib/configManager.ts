@@ -125,6 +125,52 @@ class ConfigManager {
     return false;
   }
 
+  // Move a catalog up in the list for a specific user
+  moveCatalogUp(userId: string, id: string): boolean {
+    console.log(`Moving catalog ${id} up for user ${userId}`);
+    const config = this.loadConfig(userId);
+
+    // Find the index of the catalog
+    const index = config.catalogs.findIndex(c => c.id === id);
+
+    // If catalog not found or already at the top, do nothing
+    if (index <= 0) {
+      console.log(`Catalog ${id} not found or already at the top`);
+      return false;
+    }
+
+    // Swap the catalog with the one above it
+    const temp = config.catalogs[index];
+    config.catalogs[index] = config.catalogs[index - 1];
+    config.catalogs[index - 1] = temp;
+
+    console.log(`Moved catalog ${id} from position ${index} to ${index - 1}`);
+    return this.saveConfig(userId);
+  }
+
+  // Move a catalog down in the list for a specific user
+  moveCatalogDown(userId: string, id: string): boolean {
+    console.log(`Moving catalog ${id} down for user ${userId}`);
+    const config = this.loadConfig(userId);
+
+    // Find the index of the catalog
+    const index = config.catalogs.findIndex(c => c.id === id);
+
+    // If catalog not found or already at the bottom, do nothing
+    if (index === -1 || index >= config.catalogs.length - 1) {
+      console.log(`Catalog ${id} not found or already at the bottom`);
+      return false;
+    }
+
+    // Swap the catalog with the one below it
+    const temp = config.catalogs[index];
+    config.catalogs[index] = config.catalogs[index + 1];
+    config.catalogs[index + 1] = temp;
+
+    console.log(`Moved catalog ${id} from position ${index} to ${index + 1}`);
+    return this.saveConfig(userId);
+  }
+
   // Get a specific catalog for a user
   getCatalog(userId: string, id: string): CatalogManifest | undefined {
     const config = this.loadConfig(userId);

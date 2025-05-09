@@ -17,26 +17,58 @@ export function getConfigPageHTML(
   packageVersion: string = '1.0.0'
 ) {
   const catalogRows = catalogs
-    .map(
-      catalog => `
+    .map((catalog, index, array) => {
+      const isFirst = index === 0;
+      const isLast = index === array.length - 1;
+      const isOnly = array.length === 1;
+
+      return `
     <div class="flex flex-col space-y-2 p-4 rounded-lg bg-card border border-border hover:bg-accent/50 transition-colors">
       <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
         <div>
           <h3 class="font-medium">${catalog.name}</h3>
           <p class="text-sm text-muted-foreground">${catalog.id}</p>
         </div>
-        <form method="POST" action="/configure/${userId}/remove" class="flex-shrink-0">
-          <input type="hidden" name="catalogId" value="${catalog.id}">
-          <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
-            Remove
-          </button>
-        </form>
+        <div class="flex items-center gap-2">
+          ${
+            !isFirst && !isOnly
+              ? `
+          <form method="POST" action="/configure/${userId}/moveUp" class="flex-shrink-0">
+            <input type="hidden" name="catalogId" value="${catalog.id}">
+            <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 w-9 p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up"><path d="m18 15-6-6-6 6"/></svg>
+              <span class="sr-only">Move Up</span>
+            </button>
+          </form>
+          `
+              : ''
+          }
+          ${
+            !isLast && !isOnly
+              ? `
+          <form method="POST" action="/configure/${userId}/moveDown" class="flex-shrink-0">
+            <input type="hidden" name="catalogId" value="${catalog.id}">
+            <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 w-9 p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
+              <span class="sr-only">Move Down</span>
+            </button>
+          </form>
+          `
+              : ''
+          }
+          <form method="POST" action="/configure/${userId}/remove" class="flex-shrink-0">
+            <input type="hidden" name="catalogId" value="${catalog.id}">
+            <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
+              Remove
+            </button>
+          </form>
+        </div>
       </div>
       <p class="text-sm text-muted-foreground">${catalog.description}</p>
       <p class="text-xs font-mono text-muted-foreground truncate">${catalog.endpoint}</p>
     </div>
-  `
-    )
+  `;
+    })
     .join('');
 
   // Create URLs for the Stremio integration with query parameters
