@@ -17,6 +17,11 @@ const getPackageVersion = (): string => {
 router.get('/:userId', async (req, res) => {
   const userId = req.params.userId;
 
+  // Prüfen, ob der Benutzer existiert
+  if (!configManager.userExists(userId)) {
+    return res.redirect('/configure');
+  }
+
   try {
     // Konfiguration laden
     const catalogs = configManager.getAllCatalogs(userId);

@@ -20,6 +20,12 @@ export const getConfigPage = async (c: any) => {
     return c.redirect('/configure');
   }
 
+  // Prüfen, ob der Benutzer existiert
+  const exists = await configManager.userExists(userId);
+  if (!exists) {
+    return c.redirect('/configure');
+  }
+
   try {
     // Konfiguration laden
     const catalogs = await configManager.getAllCatalogs(userId);
