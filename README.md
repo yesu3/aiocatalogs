@@ -101,18 +101,21 @@ $ git clone https://github.com/pantelx/aiocatalogs.git && cd aiocatalogs
 $ npm i
 # Build the addon
 $ npm run build
-```
-
-Development mode:
-
-```bash
 # Cloudflare worker development with locally simulated D1 database
-$ npm run dev:cf
+$ npm run dev
 ```
 
 > **Note**
 >
 > The development mode uses a locally simulated Cloudflare D1 database. You only need to deploy to Cloudflare when moving to production.
+
+### 📝 Preview your changes
+
+Preview your changes before deploying to Cloudflare:
+
+```bash
+$ npm run preview
+```
 
 ### 📝 Release Process
 
