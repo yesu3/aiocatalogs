@@ -1,8 +1,7 @@
 import {
   fetchTopLists,
   searchLists,
-  setMDBListApiConfig,
-  isMDBListApiConfigured,
+  isMDBListApiKeyValid,
   fetchMDBListCatalog,
   fetchListDetails,
 } from '../../core/utils/mdblist';
@@ -16,20 +15,18 @@ import { catalogAggregator } from '../../platforms/cloudflare/catalogAggregator'
 import { clearAddonCache } from '../../platforms/cloudflare/addon';
 import { logger } from '../../core/utils/logger';
 
-// Helper function to load and set the MDBList API key for a user
-export async function loadUserMDBListApiKey(userId: string): Promise<boolean> {
+// Helper function to load the MDBList API key for a user
+export async function loadUserMDBListApiKey(userId: string): Promise<string | null> {
   try {
     const apiKey = await configManager.loadMDBListApiKey(userId);
     if (apiKey) {
-      // Set the API key in the global configuration
-      setMDBListApiConfig({ apiKey, userId });
       logger.debug(`Loaded MDBList API key for user ${userId}`);
-      return true;
+      return apiKey;
     }
-    return false;
+    return null;
   } catch (error) {
     logger.error(`Error loading MDBList API key for user ${userId}:`, error);
-    return false;
+    return null;
   }
 }
 
@@ -45,17 +42,17 @@ export const getMDBListSearch = async (c: any) => {
   }
 
   // Load the user's API key from the database
-  await loadUserMDBListApiKey(userId);
+  const apiKey = await loadUserMDBListApiKey(userId);
 
   // Check if API key is configured
-  if (!isMDBListApiConfigured()) {
+  if (!apiKey || !isMDBListApiKeyValid(apiKey)) {
     return c.redirect(
       `/configure/${userId}?error=MDBList API key is required. Please configure it in the settings.`
     );
   }
 
   try {
-    const catalogs = await searchLists(query);
+    const catalogs = await searchLists(query, apiKey);
     const message = c.req.query('message') || '';
     const error = c.req.query('error') || '';
 
@@ -78,17 +75,17 @@ export const getMDBListTop100 = async (c: any) => {
   }
 
   // Load the user's API key from the database
-  await loadUserMDBListApiKey(userId);
+  const apiKey = await loadUserMDBListApiKey(userId);
 
   // Check if API key is configured
-  if (!isMDBListApiConfigured()) {
+  if (!apiKey || !isMDBListApiKeyValid(apiKey)) {
     return c.redirect(
       `/configure/${userId}?error=MDBList API key is required. Please configure it in the settings.`
     );
   }
 
   try {
-    const catalogs = await fetchTopLists();
+    const catalogs = await fetchTopLists(apiKey);
     const message = c.req.query('message') || '';
     const error = c.req.query('error') || '';
 
@@ -111,10 +108,10 @@ export const addMDBListCatalog = async (c: any) => {
   }
 
   // Load the user's API key from the database
-  await loadUserMDBListApiKey(userId);
+  const apiKey = await loadUserMDBListApiKey(userId);
 
   // Check if API key is configured
-  if (!isMDBListApiConfigured()) {
+  if (!apiKey || !isMDBListApiKeyValid(apiKey)) {
     return c.redirect(
       `/configure/${userId}?error=MDBList API key is required. Please configure it in the settings.`
     );
@@ -145,7 +142,7 @@ export const addMDBListCatalog = async (c: any) => {
   // Fetch the actual list details to get the proper name
   let listName = name;
   try {
-    const listDetails = await fetchListDetails(catalogId);
+    const listDetails = await fetchListDetails(catalogId, apiKey);
     if (listDetails && listDetails.name) {
       listName = listDetails.name;
     }
@@ -154,51 +151,81 @@ export const addMDBListCatalog = async (c: any) => {
     // Continue with the provided name
   }
 
-  // Use our own endpoint with userId included
-  const catalogUrl = `${baseUrl}/configure/${userId}/mdblist/${catalogId}/manifest.json`;
-
   try {
-    // Before adding the catalog, customize the manifest with the real name
-    const result = await handleAddCatalog(
-      userId,
-      catalogUrl,
-      async (url: string) => {
-        const manifest = await catalogAggregator.fetchCatalogManifest(url);
-        // Update name in the manifest with the real name
-        if (manifest && manifest.name) {
-          manifest.name = listName;
-        }
-        if (manifest && manifest.catalogs) {
-          for (const cat of manifest.catalogs) {
-            // Replace the generic name with type-specific real name
-            if (cat.type === 'movie') {
-              cat.name = `${listName}`;
-            } else if (cat.type === 'series') {
-              cat.name = `${listName}`;
-            }
-          }
-        }
-        return manifest;
-      },
-      (userId: string, manifest: any) => configManager.addCatalog(userId, manifest),
-      (userId: string) => {
-        // Clear both caches to ensure fresh data
-        clearAddonCache(userId);
-        configManager.clearCache(userId);
-      }
-    );
+    // Instead of fetching via HTTP, directly create the manifest
+    // Generate the manifest URL (for reference only)
+    const manifestUrl = `${baseUrl}/configure/${userId}/mdblist/${catalogId}/manifest.json`;
 
-    if (result.success) {
-      return c.redirect(`/configure/${userId}?message=${result.message}`);
-    } else {
-      // Try to go back to the previous page if possible
-      const referer = c.req.header('referer');
-      if (referer && (referer.includes('/mdblist/search') || referer.includes('/mdblist/top100'))) {
-        return c.redirect(`${referer}?error=${result.error}`);
-      }
+    // Check if we have content to make a better manifest
+    const catalog = await fetchMDBListCatalog(catalogId, apiKey);
+    const hasMovies = catalog.metas.some(item => item.type === 'movie');
+    const hasSeries = catalog.metas.some(item => item.type === 'series');
 
-      return c.redirect(`/configure/${userId}?error=${result.error}`);
+    // Create catalogs array based on available content
+    const catalogs = [];
+
+    if (hasMovies) {
+      catalogs.push({
+        id: `mdblist_${catalogId}`,
+        type: 'movie',
+        name: listName,
+      });
     }
+
+    if (hasSeries) {
+      catalogs.push({
+        id: `mdblist_${catalogId}`,
+        type: 'series',
+        name: listName,
+      });
+    }
+
+    // If no content was found, add both types as fallback
+    if (catalogs.length === 0) {
+      catalogs.push(
+        {
+          id: `mdblist_${catalogId}`,
+          type: 'movie',
+          name: listName,
+        },
+        {
+          id: `mdblist_${catalogId}`,
+          type: 'series',
+          name: listName,
+        }
+      );
+    }
+
+    // Create the manifest directly
+    const manifest = {
+      id: `mdblist_${catalogId}`,
+      version: '1.0.0',
+      name: listName,
+      description: `${listName} - MDBList catalog`,
+      endpoint: `${baseUrl}/configure/${userId}/mdblist/${catalogId}`,
+      resources: ['catalog'],
+      types: ['movie', 'series'],
+      catalogs: catalogs,
+      behaviorHints: {
+        adult: false,
+        p2p: false,
+      },
+      // Store apiKey in context for future use
+      context: { apiKey },
+    };
+
+    // Add the catalog to the user's config
+    const success = await configManager.addCatalog(userId, manifest);
+
+    if (!success) {
+      return c.redirect(`/configure/${userId}?error=Failed to add MDBList catalog`);
+    }
+
+    // Clear both caches to ensure fresh data
+    clearAddonCache(userId);
+    configManager.clearCache(userId);
+
+    return c.redirect(`/configure/${userId}?message=Successfully added catalog: ${listName}`);
   } catch (error) {
     console.error('Error adding MDBList catalog:', error);
     return c.redirect(`/configure/${userId}?error=Failed to add MDBList catalog: ${error}`);
@@ -225,7 +252,6 @@ export const saveMDBListConfig = async (c: any) => {
 
     // Validate the API key by making a test call to the MDBList API
     try {
-      setMDBListApiConfig({ apiKey, userId });
       const testResult = await fetchTopLists(apiKey);
       if (!testResult || testResult.length === 0) {
         logger.warn(`API key validation failed for user ${userId}: No lists returned`);
@@ -245,17 +271,12 @@ export const saveMDBListConfig = async (c: any) => {
     const success = await configManager.saveMDBListApiKey(userId, apiKey);
 
     if (!success) {
-      logger.warn(`Database save failed, but API key is set in memory for user ${userId}`);
-      // Despite database error, set the key in memory
-      setMDBListApiConfig({ apiKey, userId });
-      // Inform the user that there was a problem, but the API key works
+      logger.warn(`Database save failed for API key for user ${userId}`);
+      // Inform the user that there was a problem
       return c.redirect(
-        `/configure/${userId}?message=MDBList API key is working but could not be saved permanently. It will work until the server restarts.`
+        `/configure/${userId}?error=Could not save MDBList API key permanently. Please try again.`
       );
     }
-
-    // Set it in memory for immediate use
-    setMDBListApiConfig({ apiKey, userId });
 
     return c.redirect(`/configure/${userId}?message=MDBList API configuration saved successfully`);
   } catch (error) {
