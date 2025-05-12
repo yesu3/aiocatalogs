@@ -36,15 +36,18 @@
 - D1 database integration for persistent storage
 - Cloudflare Workers for serverless architecture and global edge network
 - Development with Wrangler CLI
+- Rate limiting to protect API endpoints
+- Enhanced logging capabilities for better debugging and monitoring
 
 ### 🔍 Enhanced Catalog Management
 
 - Combine multiple catalog addons into a single addon
-- User-friendly configuration via web interface
+- User-friendly configuration via modern, intuitive web interface
 - Dynamic loading and caching of catalog data
 - Intelligent request routing to the appropriate source addons
-- Reorderable catalogs
-- Add MDBList catalogs with one click (requires MDBList API key)
+- Drag-and-drop functionality for reordering catalogs
+- Add MDBList catalogs with one click through direct API integration (requires MDBList API key)
+- Advanced catalog organization tools
 
 ### 🌐 Cross-Platform Support
 
@@ -150,7 +153,7 @@ You can configure the addon using environment variables:
 
 1. Open the addon's web interface at your installation URL
 2. Click "Create New Configuration" to create a new user ID
-3. Add catalog addons by entering their manifest URLs
+3. Add catalog addons by entering their manifest URLs or by clicking the "Add MDBList Catalog" button
 4. Install the addon in Stremio using the displayed URL
 
 ### Why can't I find specific content?
