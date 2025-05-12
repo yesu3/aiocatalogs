@@ -58,6 +58,13 @@ export function buildManifest(
         name: 'AIO Catalogs (No catalogs added yet)',
       });
       allTypes.add('movie');
+
+      // Add stremioAddonsConfig when no catalogs are added
+      (manifest as any).stremioAddonsConfig = {
+        issuer: 'https://stremio-addons.net',
+        signature:
+          'eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..aT0Md3j84gmtCUKxzsvn8A.71Mk-B82vQfci-ndjLqR5L568LFuG4JgS4yGD63q87tjric2vORJk0aqw23RG3c9cONs3-8HozwGeGvcmZbfktjYd5UKe9LGBNSbBmWJ7Y2U2elIhTgXHXRUVCCTZg_R.oRtgV-h1gfSmRAN4AMEZNg',
+      };
     } else {
       // Add catalogs from user configurations
       userCatalogs.forEach(source => {
@@ -124,6 +131,12 @@ export function buildManifest(
       behaviorHints: {
         configurable: true,
         configurationRequired: false,
+      },
+      // Add stremioAddonsConfig to the fallback manifest as well
+      stremioAddonsConfig: {
+        issuer: 'https://stremio-addons.net',
+        signature:
+          'eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..aT0Md3j84gmtCUKxzsvn8A.71Mk-B82vQfci-ndjLqR5L568LFuG4JgS4yGD63q87tjric2vORJk0aqw23RG3c9cONs3-8HozwGeGvcmZbfktjYd5UKe9LGBNSbBmWJ7Y2U2elIhTgXHXRUVCCTZg_R.oRtgV-h1gfSmRAN4AMEZNg',
       },
     };
   }
