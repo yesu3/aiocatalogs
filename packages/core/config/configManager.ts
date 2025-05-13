@@ -180,7 +180,7 @@ export abstract class BaseConfigManager {
       config.randomizedCatalogs.splice(index, 1);
       logger.debug(`Removed catalog ${id} from randomized list`);
     }
-    
+
     return await this.saveConfig(userId, config);
   }
 
@@ -231,7 +231,7 @@ export abstract class BaseConfigManager {
 
     // Initialize catalogOrder if it doesn't exist
     if (!config.catalogOrder) {
-      config.catalogOrder = config.catalogs.map(c => c.id);
+      config.catalogOrder = config.catalogs.map((c: CatalogManifest) => c.id);
     }
 
     // Find the index of the catalog in the order array
