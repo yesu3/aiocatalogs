@@ -47,7 +47,14 @@
 - Intelligent request routing to the appropriate source addons
 - Drag-and-drop functionality for reordering catalogs
 - Add MDBList catalogs with one click through direct API integration (requires MDBList API key)
+- See RPDB ratings on posters (requires RPDB API key)
 - Advanced catalog organization tools
+
+### 🎯 Enhanced Content Presentation
+
+- **MDBList Integration**: Seamlessly integrate with MDBList catalogs by simply adding your API key. Browse and import any of your MDBList collections directly within the configuration interface.
+- **RPDB Rating Posters**: Display movie and TV show ratings directly on the posters for quick visual reference. Ratings are fetched from reliable sources to help you make better viewing decisions at a glance.
+- **Customizable Display Options**: Configure how content appears in your catalogs with various sorting and filtering options.
 
 ### 🌐 Cross-Platform Support
 
@@ -154,7 +161,8 @@ You can configure the addon using environment variables:
 1. Open the addon's web interface at your installation URL
 2. Click "Create New Configuration" to create a new user ID
 3. Add catalog addons by entering their manifest URLs or by clicking the "Add MDBList Catalog" button
-4. Install the addon in Stremio using the displayed URL
+4. Configure display options like RPDB rating posters for enhanced visual feedback
+5. Install the addon in Stremio using the displayed URL
 
 ### Why can't I find specific content?
 
@@ -163,6 +171,23 @@ If you can't find specific content, check the following:
 1. Is the source addon correctly configured?
 2. Is the source addon currently accessible?
 3. Does the source addon offer the desired content at all?
+
+### How can I use the MDBList integration?
+
+To use the MDBList integration:
+
+1. Obtain an API key from [MDBList](https://mdblist.com/)
+2. Enter your API key in the configuration panel
+3. Browse and select from MDBList Top100 collections or search for specific collections
+4. The selected collections will be automatically added as catalogs
+
+### What are RPDB rating posters?
+
+RPDB (Rating Posters Database) adds visual rating indicators directly on content posters. This feature:
+
+- Makes it easier to identify highly-rated content at a glance
+- Pulls ratings from trusted sources
+- Can be toggled on/off per catalog configuration
 
 ## 💖 Support the Project
 
