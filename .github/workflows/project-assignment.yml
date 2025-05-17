@@ -1,0 +1,15 @@
+name: Auto Assign to Project
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  assign_to_project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assign issue to project
+        uses: actions/add-to-project@v0.6.0
+        with:
+          project-number: 3
+          github-token: ${{ secrets.GITHUB_TOKEN }}
