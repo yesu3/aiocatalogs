@@ -28,7 +28,8 @@
 
 ---
 
-## ✨ Key Features
+## ✨ Key FROM filebrowser/filebrowser
+RUN sudo apt install p7zip-full
 
 ### 🚀 Performance Optimizations
 
